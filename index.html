@@ -1,0 +1,2339 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>IronForge Barbell - Carga, RPE, RIR, 1RM, Progresiones, Puntos Oficiales & Federaciones</title>
+  
+  <meta name="description" content="Calculadora visual de barra con zoom dinámico, estimación 1RM por RPE y RIR separados, progresiones Smolov/Bilbo/5-3-1, puntos oficiales DOTS/IPF GL/Wilks, evaluador Tier de Dios y guía de federaciones de powerlifting.">
+  <meta name="theme-color" content="#0a0a0c">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            },
+            dotsPink: '#ff2d78',
+            ipfBlue: '#38bdf8'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap');
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    .font-mono-num {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      appearance: textfield;
+      -moz-appearance: textfield;
+      -webkit-appearance: textfield;
+    }
+
+    .plate-red    { fill: #dc2626; stroke: #991b1b; }
+    .plate-blue   { fill: #2563eb; stroke: #1d4ed8; }
+    .plate-yellow { fill: #eab308; stroke: #a16207; }
+    .plate-green  { fill: #16a34a; stroke: #15803d; }
+    .plate-white  { fill: #f8fafc; stroke: #cbd5e1; }
+    .plate-black  { fill: #1e293b; stroke: #0f172a; }
+    .plate-chrome { fill: #94a3b8; stroke: #475569; }
+
+    .plate-comm       { fill: #262626; stroke: #171717; }
+    .plate-comm-light { fill: #404040; stroke: #262626; }
+
+    .plate-custom-purple { fill: #7c3aed; stroke: #5b21b6; }
+    .plate-custom-teal   { fill: #0d9488; stroke: #115e59; }
+    .plate-custom-orange { fill: #ea580c; stroke: #9a3412; }
+    .plate-custom-slate  { fill: #334155; stroke: #1e293b; }
+
+    .glow-dots { box-shadow: 0 0 25px -6px rgba(255, 45, 120, 0.25); }
+    .glow-ipf  { box-shadow: 0 0 25px -6px rgba(56, 189, 248, 0.25); }
+    .glow-god  { box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.45); }
+    .glow-titan { box-shadow: 0 0 35px -5px rgba(239, 68, 68, 0.35); }
+    .glow-colossus { box-shadow: 0 0 30px -5px rgba(56, 189, 248, 0.35); }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-neutral-950 text-neutral-800 dark:text-neutral-100 min-h-screen flex flex-col selection:bg-blue-600 selection:text-white transition-colors duration-200">
+
+  <!-- =========================================================
+       1. BARRA SUPERIOR (HEADER)
+       ========================================================= -->
+  <header class="border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/70 backdrop-blur-md sticky top-0 z-40 transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-bold">
+          <i data-lucide="dumbbell" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="font-extrabold tracking-tight text-lg text-neutral-900 dark:text-white block leading-none">IronForge <span class="text-blue-500">Barbell</span></span>
+          <span class="text-xs text-neutral-500 dark:text-neutral-400">Plataforma Integral de Entrenamiento & Competición</span>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2.5">
+        <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shadow-sm" title="Cambiar tema">
+          <i id="themeIcon" data-lucide="sun" class="w-4 h-4"></i>
+        </button>
+
+        <div class="flex items-center bg-neutral-100 dark:bg-neutral-900 p-1 rounded-xl border border-neutral-200 dark:border-neutral-700">
+          <button id="unitBtnKg" onclick="setPrimaryUnit('kg')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-sm">
+            KG
+          </button>
+          <button id="unitBtnLb" onclick="setPrimaryUnit('lb')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white">
+            LBS
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       2. CONTENIDO PRINCIPAL DE LA APLICACIÓN
+       ========================================================= -->
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full space-y-8">
+
+    <!-- SECCIÓN 1: CALCULADORA DE BARRA & VISUALIZADOR SVG -->
+    <section class="bg-white dark:bg-neutral-900/90 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xl overflow-hidden backdrop-blur-sm transition-colors duration-200">
+      <div class="p-4 sm:p-6 border-b border-neutral-200 dark:border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse"></span>
+            <h2 class="text-xl font-bold text-neutral-900 dark:text-white tracking-tight">Carga Óptima de Barra</h2>
+          </div>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Distribución simétrica bilateral exacta con auto-zoom de cámara</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="relative flex items-center">
+            <input type="number" id="targetWeightInput" step="0.5" min="0" max="600" value="0" 
+              class="w-36 bg-neutral-50 dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-xl px-4 py-2 text-2xl font-extrabold text-neutral-900 dark:text-white font-mono-num focus:outline-none focus:border-blue-500 transition-colors shadow-inner"
+              oninput="onWeightChange()">
+            <span id="targetWeightUnitLabel" class="absolute right-3.5 text-xs font-bold text-neutral-400">KG</span>
+          </div>
+
+          <div class="flex items-center bg-neutral-100 dark:bg-neutral-950 rounded-xl border border-neutral-200 dark:border-neutral-800 p-1">
+            <button onclick="adjustWeight(-10)" class="px-2.5 py-1.5 text-xs font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-lg transition-colors">-10</button>
+            <button onclick="adjustWeight(-2.5)" class="px-2.5 py-1.5 text-xs font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-lg transition-colors">-2.5</button>
+            <button onclick="adjustWeight(2.5)" class="px-2.5 py-1.5 text-xs font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-lg transition-colors">+2.5</button>
+            <button onclick="adjustWeight(10)" class="px-2.5 py-1.5 text-xs font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-lg transition-colors">+10</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-4 sm:px-6 py-2.5 bg-neutral-100/60 dark:bg-neutral-950/60 border-b border-neutral-200 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center space-x-2">
+          <span class="text-neutral-500 dark:text-neutral-400 font-semibold uppercase tracking-wider text-[11px]">Tipo de discos:</span>
+          <div class="inline-flex bg-white dark:bg-neutral-900 p-0.5 rounded-lg border border-neutral-200 dark:border-neutral-800">
+            <button id="typeBtnIpf" onclick="setPlateType('ipf')" class="px-3 py-1 rounded-md font-bold transition-all bg-blue-600 text-white shadow-sm flex items-center space-x-1.5">
+              <span>Calibrados IPF</span>
+            </button>
+            <button id="typeBtnComm" onclick="setPlateType('commercial')" class="px-3 py-1 rounded-md font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white flex items-center space-x-1.5">
+              <span>Gym Comercial</span>
+            </button>
+            <button id="typeBtnCustom" onclick="setPlateType('custom')" class="px-3 py-1 rounded-md font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white flex items-center space-x-1.5">
+              <span>Personalizados</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="text-neutral-500 dark:text-neutral-400 text-[11px] flex items-center space-x-2">
+          <span id="plateTypeNotice" class="text-neutral-700 dark:text-neutral-300 font-medium">Discos de competición IPF (25kg - 0.25kg)</span>
+          <button onclick="togglePlateSettings()" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold ml-2">Editar inventario</button>
+        </div>
+      </div>
+
+      <!-- Contenedor del Dibujo SVG de la Barra Completa -->
+      <div class="bg-gradient-to-b from-neutral-100 via-neutral-100 to-neutral-200/60 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-900/60 p-4 sm:p-8 border-b border-neutral-200 dark:border-neutral-800 flex flex-col items-center justify-center relative">
+        <!-- Aviso de límite de manga -->
+        <div id="sleeveLimitNotice" class="absolute top-3 left-4 hidden px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-500/40 text-amber-600 dark:text-amber-400 text-[11px] font-bold">
+          ⚠️ Capacidad máxima recomendada de barra (Límite 600 kg / 1.320 lb)
+        </div>
+
+        <div class="w-full flex justify-center items-center py-4 overflow-hidden">
+          <svg id="barbellSvg" viewBox="0 0 900 240" class="w-full max-w-5xl h-auto select-none transition-all duration-300"></svg>
+        </div>
+        <div id="sidePlateBadges" class="flex flex-wrap items-center justify-center gap-2 mt-4 w-full"></div>
+      </div>
+
+      <div class="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-6 bg-neutral-50/50 dark:bg-neutral-900/40">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2">Barra Seleccionada</label>
+          <select id="barSelect" onchange="onBarChange()" class="w-full bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-xl px-3 py-2.5 text-sm font-semibold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-blue-500 transition-colors">
+            <option value="20" data-lb="45">Olímpica Masculina / IPF (20 kg / 45 lb)</option>
+            <option value="15" data-lb="35">Olímpica Femenina (15 kg / 35 lb)</option>
+            <option value="10" data-lb="22">Barra Técnica (10 kg / 22 lb)</option>
+            <option value="25" data-lb="55">Trap Bar / Hex Bar (25 kg / 55 lb)</option>
+            <option value="8" data-lb="17.6">Barra Z / EZ Curl (8 kg / 17.6 lb)</option>
+            <option value="custom">Personalizada...</option>
+          </select>
+          <div id="customBarWrap" class="mt-2 hidden">
+            <input type="number" id="customBarWeight" step="0.1" value="0" placeholder="Peso de la barra" class="w-full bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-lg px-3 py-1.5 text-xs text-neutral-900 dark:text-white" oninput="calculateLoad()">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2">Collares / Seguros (Par)</label>
+          <select id="collarSelect" onchange="calculateLoad()" class="w-full bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-xl px-3 py-2.5 text-sm font-semibold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-blue-500 transition-colors">
+            <option value="0">Sin seguros (0 kg / 0 lb)</option>
+            <option value="0.5" data-lb="1.1">Plásticos / Resortes ligeros (0.5 kg / 1.1 lb)</option>
+            <option value="5" data-lb="11">Competición IPF Oficial (5.0 kg / 11 lb el par)</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1">Carga Efectiva en Barra</div>
+            <div class="flex items-baseline space-x-2">
+              <span id="actualTotalWeight" class="text-3xl font-extrabold text-blue-600 dark:text-blue-400 font-mono-num">0.0</span>
+              <span id="actualUnitLabel" class="text-sm font-bold text-neutral-500 dark:text-neutral-400">KG</span>
+              <span id="weightDiffNotice" class="text-xs font-medium text-amber-500 dark:text-amber-400 ml-2 hidden">(Ajustado al inventario)</span>
+            </div>
+            <div class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+              Peso por manga: <span id="weightPerSideText" class="font-bold text-neutral-800 dark:text-neutral-200 font-mono-num">0.0 kg</span>
+            </div>
+          </div>
+
+          <div class="mt-3 flex items-center space-x-2">
+            <button onclick="copyLoadText()" class="flex-1 inline-flex items-center justify-center space-x-1.5 bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-semibold py-2 px-3 rounded-lg transition-colors">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span id="copyBtnText">Copiar Carga</span>
+            </button>
+            <button onclick="togglePlateSettings()" class="bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 p-2 rounded-lg transition-colors" title="Inventario de Discos">
+              <i data-lucide="settings-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="plateInventoryDrawer" class="hidden border-t border-neutral-200 dark:border-neutral-800 p-4 sm:p-6 bg-neutral-50 dark:bg-neutral-950/80">
+        <div id="customPlatesManager" class="mb-5 pb-5 border-b border-neutral-200 dark:border-neutral-800 hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <h3 class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center space-x-1.5">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+              <span>Agregar Disco de Peso No Convencional</span>
+            </h3>
+            <span class="text-[11px] text-neutral-500 dark:text-neutral-400">Ejemplo: discos gastados de 20.4, 11.2, 10.4, 44 lb...</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="relative">
+              <input type="number" id="newCustomPlateWeight" step="0.1" min="0.1" placeholder="Ej: 20.4"
+                class="w-32 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-lg px-3 py-1.5 text-xs text-neutral-900 dark:text-white font-mono-num focus:outline-none focus:border-amber-500">
+              <span class="absolute right-2.5 top-1.5 text-[10px] font-bold text-neutral-400 unitText">KG</span>
+            </div>
+            <button onclick="addCustomPlate()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1">
+              <i data-lucide="plus" class="w-3 h-3"></i>
+              <span>Añadir a mi Gym</span>
+            </button>
+            <button onclick="resetCustomPlatesDefault()" class="text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 text-xs px-2 py-1.5 underline">
+              Restaurar predeterminados
+            </button>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+          <h3 class="text-xs font-bold text-neutral-800 dark:text-white uppercase tracking-wider">Discos Habilitados para el Cálculo</h3>
+          <span class="text-xs text-neutral-500 dark:text-neutral-400">Activa o desactiva discos según tu rack</span>
+        </div>
+        <div id="platesCheckboxesContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-8 gap-2.5"></div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: ESTIMADOR DE ESFUERZO & 1RM (RPE Y RIR SEPARADOS) -->
+    <section class="bg-white dark:bg-neutral-900/90 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xl overflow-hidden backdrop-blur-sm transition-colors duration-200">
+      <div class="p-4 sm:p-6 border-b border-neutral-200 dark:border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 flex items-center justify-center font-bold">
+            <i data-lucide="gauge" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-neutral-900 dark:text-white tracking-tight">Estimador de Esfuerzo & 1RM</h2>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Cálculo de repeticiones y reservas con escalas independientes</p>
+          </div>
+        </div>
+
+        <div class="flex items-center bg-neutral-100 dark:bg-neutral-950 p-1 rounded-xl border border-neutral-200 dark:border-neutral-800">
+          <button id="effortTabRpe" onclick="setEffortMode('rpe')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-indigo-600 text-white shadow-sm flex items-center space-x-1.5">
+            <span>Escala RPE (RTS)</span>
+          </button>
+          <button id="effortTabRir" onclick="setEffortMode('rir')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white flex items-center space-x-1.5">
+            <span>Escala RIR (En Reserva)</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-4 space-y-5">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">Peso Levantado</label>
+            <div class="relative">
+              <input type="number" id="effortWeightInput" step="0.1" min="0" value="0" oninput="calculateEffort()"
+                class="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-xl px-4 py-2.5 text-xl font-bold text-neutral-900 dark:text-white font-mono-num focus:outline-none focus:border-indigo-500 transition-colors shadow-inner">
+              <span id="effortWeightUnitLabel" class="absolute right-3.5 top-3 text-xs font-bold text-neutral-400">KG</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Repeticiones Hechas</label>
+              <span id="effortRepsDisplay" class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 font-mono-num">0 reps</span>
+            </div>
+            <input type="range" id="effortRepsRange" min="0" max="12" value="0" step="1" oninput="onEffortRepsChange(this.value)"
+              class="w-full h-2 bg-neutral-200 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+            <div class="flex justify-between text-[10px] text-neutral-400 font-mono-num mt-1">
+              <span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span><span>12</span>
+            </div>
+          </div>
+
+          <div id="wrapRpeInput">
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Esfuerzo RPE (Tuchscherer)</label>
+              <span id="rpeDisplayBadge" class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 font-mono-num">RPE 0</span>
+            </div>
+            <select id="rpeSelectInput" onchange="calculateEffort()" class="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-xl px-3 py-2.5 text-sm font-semibold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-indigo-500">
+              <option value="0" selected>0 - Sin datos ingresados</option>
+              <option value="10">RPE 10.0 - Esfuerzo Máximo (0 reps en reserva)</option>
+              <option value="9.5">RPE 9.5 - Podría haber salido otra con suerte</option>
+              <option value="9">RPE 9.0 - Quedaba 1 repetición sólida</option>
+              <option value="8.5">RPE 8.5 - Seguro 1 rep, tal vez 2</option>
+              <option value="8">RPE 8.0 - Quedaban 2 repeticiones</option>
+              <option value="7.5">RPE 7.5 - Seguro 2 reps, tal vez 3</option>
+              <option value="7">RPE 7.0 - Velocidad óptima / 3 reps en recámara</option>
+              <option value="6.5">RPE 6.5 - Calentamiento pesado</option>
+              <option value="6">RPE 6.0 - Barra muy rápida</option>
+            </select>
+          </div>
+
+          <div id="wrapRirInput" class="hidden">
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Repeticiones en Reserva (RIR)</label>
+              <span id="rirDisplayBadge" class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 font-mono-num">RIR -</span>
+            </div>
+            <select id="rirSelectInput" onchange="calculateEffort()" class="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-xl px-3 py-2.5 text-sm font-semibold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-indigo-500">
+              <option value="none" selected>Seleccionar RIR...</option>
+              <option value="0">0 RIR - Al fallo concéntrico absoluto</option>
+              <option value="1">1 RIR - Podías sacar exactamente 1 rep más</option>
+              <option value="2">2 RIR - Podías sacar 2 reps más (Óptimo)</option>
+              <option value="3">3 RIR - Podías sacar 3 reps más</option>
+              <option value="4">4 RIR - 4 o más reps en recámara</option>
+            </select>
+          </div>
+
+          <div class="pt-2">
+            <button onclick="setEffortWeightFromBar()" class="w-full py-2.5 px-3 rounded-lg border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-600 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-950 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 transition-colors flex items-center justify-center space-x-1.5">
+              <i data-lucide="arrow-down-left" class="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400"></i>
+              <span>Cargar peso actual de la barra</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-8 flex flex-col justify-between space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-neutral-100/70 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col justify-between">
+              <div>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 block mb-1">1RM Mínimo (Brzycki)</span>
+                <div class="flex items-baseline space-x-1">
+                  <span id="oneRmMin" class="text-2xl font-black text-neutral-800 dark:text-neutral-200 font-mono-num">0.0</span>
+                  <span class="text-xs font-bold text-neutral-400 unitText">KG</span>
+                </div>
+              </div>
+              <p class="text-[11px] text-neutral-500 dark:text-neutral-400 mt-2">Cálculo conservador para asegurar aperturas de torneo.</p>
+            </div>
+
+            <div class="bg-gradient-to-b from-indigo-50 to-white dark:from-indigo-950/40 dark:to-neutral-950 border border-indigo-200 dark:border-indigo-500/40 rounded-xl p-4 flex flex-col justify-between shadow-lg shadow-indigo-500/5 dark:shadow-indigo-950/20">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">1RM Oficial RTS</span>
+                  <span class="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-bold uppercase">Preciso</span>
+                </div>
+                <div class="flex items-baseline space-x-1">
+                  <span id="oneRmOfficial" class="text-3xl font-black text-indigo-600 dark:text-indigo-400 font-mono-num">0.0</span>
+                  <span class="text-sm font-bold text-neutral-500 dark:text-neutral-400 unitText">KG</span>
+                </div>
+              </div>
+              <p class="text-[11px] text-neutral-600 dark:text-neutral-300 mt-2 font-medium">Porcentaje calculado: <span id="effortPercentageText" class="text-indigo-600 dark:text-indigo-400 font-mono-num font-bold">0.0%</span></p>
+            </div>
+
+            <div class="bg-neutral-100/70 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col justify-between">
+              <div>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 block mb-1">1RM Máximo (Lombardi)</span>
+                <div class="flex items-baseline space-x-1">
+                  <span id="oneRmMax" class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono-num">0.0</span>
+                  <span class="text-xs font-bold text-neutral-400 unitText">KG</span>
+                </div>
+              </div>
+              <p class="text-[11px] text-neutral-500 dark:text-neutral-400 mt-2">Tope superior para días de máxima aceleración.</p>
+            </div>
+          </div>
+
+          <div class="bg-neutral-100/50 dark:bg-neutral-950 rounded-xl border border-neutral-200 dark:border-neutral-800/80 p-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-3 flex items-center justify-between">
+              <span>Pesos de Trabajo Sugeridos para la Sesión</span>
+              <span class="text-[11px] font-normal text-neutral-500 dark:text-neutral-400">Basado en tu e1RM oficial</span>
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-800 font-mono-num">
+                    <th class="pb-2 font-semibold">Repeticiones</th>
+                    <th class="pb-2 font-semibold">RPE 7 / 3 RIR</th>
+                    <th class="pb-2 font-semibold">RPE 8 / 2 RIR</th>
+                    <th class="pb-2 font-semibold">RPE 9 / 1 RIR</th>
+                    <th class="pb-2 font-semibold">RPE 10 / 0 RIR</th>
+                    <th class="pb-2 text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="rpeWorkMatrixBody" class="divide-y divide-neutral-200 dark:divide-neutral-900 font-mono-num"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: PROGRESIONES EN TARJETAS LIMPIAS (SMOLOV, BILBO, 5/3/1) -->
+    <section class="bg-white dark:bg-neutral-900/90 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xl overflow-hidden backdrop-blur-sm transition-colors duration-200">
+      <div class="p-4 sm:p-6 border-b border-neutral-200 dark:border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-500 dark:text-amber-400 flex items-center justify-center font-bold">
+            <i data-lucide="trending-up" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-neutral-900 dark:text-white tracking-tight">Calculador de Progresiones</h2>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Planificación por bloques con Smolov Jr, Método Bilbo y Wendler 5/3/1</p>
+          </div>
+        </div>
+
+        <div class="flex items-center bg-neutral-100 dark:bg-neutral-950 p-1 rounded-xl border border-neutral-200 dark:border-neutral-800">
+          <button id="progTabSmolov" onclick="setProgressionMethod('smolov')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-600 text-white shadow-sm">
+            Smolov Jr
+          </button>
+          <button id="progTabBilbo" onclick="setProgressionMethod('bilbo')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white">
+            Método Bilbo
+          </button>
+          <button id="progTab531" onclick="setProgressionMethod('531')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white">
+            Wendler 5/3/1
+          </button>
+        </div>
+      </div>
+
+      <div class="p-4 sm:p-6 border-b border-neutral-200 dark:border-neutral-800/80 bg-neutral-50 dark:bg-neutral-950/40">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">1RM Base</label>
+              <button onclick="useCurrentE1rmForProgression()" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-semibold flex items-center space-x-1">
+                <i data-lucide="import" class="w-3 h-3"></i>
+                <span>Cargar 1RM actual</span>
+              </button>
+            </div>
+            <div class="relative">
+              <input type="number" id="progBase1rmInput" step="0.5" min="0" value="0" oninput="calculateProgression()"
+                class="w-full bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-xl px-3.5 py-2 text-lg font-bold text-neutral-900 dark:text-white font-mono-num focus:outline-none focus:border-amber-500 shadow-inner">
+              <span class="absolute right-3.5 top-2.5 text-xs font-bold text-neutral-400 unitText">KG</span>
+            </div>
+          </div>
+
+          <div id="progDynamicSelectContainer">
+            <label id="progSelectLabel" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">Semana del Ciclo</label>
+            <div id="smolovSelectWrap">
+              <select id="smolovWeekSelect" onchange="calculateProgression()" class="w-full bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-xl px-3.5 py-2 text-sm font-semibold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-amber-500">
+                <option value="1">Semana 1 (Carga base)</option>
+                <option value="2">Semana 2 (+2.5 kg / +5 lb)</option>
+                <option value="3">Semana 3 (+5.0 kg / +10 lb)</option>
+              </select>
+            </div>
+            <div id="bilboSelectWrap" class="hidden">
+              <select id="bilboIntensitySelect" onchange="calculateProgression()" class="w-full bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-xl px-3.5 py-2 text-sm font-semibold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-amber-500">
+                <option value="0.50">50% del 1RM (&gt;25 reps)</option>
+                <option value="0.55" selected>55% del 1RM (Clásico 20-25 reps)</option>
+                <option value="0.60">60% del 1RM (15-20 reps)</option>
+                <option value="0.65">65% del 1RM (12-15 reps)</option>
+                <option value="0.70">70% del 1RM (10-12 reps)</option>
+              </select>
+            </div>
+            <div id="wendlerSelectWrap" class="hidden">
+              <select id="wendlerWeekSelect" onchange="calculateProgression()" class="w-full bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-xl px-3.5 py-2 text-sm font-semibold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-amber-500">
+                <option value="1">Semana 1: 3&times;5 (65%, 75%, 85%+)</option>
+                <option value="2">Semana 2: 3&times;3 (70%, 80%, 90%+)</option>
+                <option value="3">Semana 3: 5/3/1 (75%, 85%, 95%+)</option>
+                <option value="4">Semana 4: Descarga / Deload</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="bg-neutral-100/70 dark:bg-neutral-950/80 p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-600 dark:text-neutral-300 flex items-start space-x-2">
+            <i data-lucide="info" class="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5"></i>
+            <span id="progShortTip">Microciclo de 3 semanas con 4 sesiones de alta frecuencia.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 sm:p-6">
+        <div id="progressionCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 4: RENDIMIENTO RELATIVO & PUNTOS OFICIALES (DOTS, IPF GL, WILKS) -->
+    <section class="bg-white dark:bg-neutral-900/90 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xl overflow-hidden backdrop-blur-sm transition-colors duration-200">
+      <div class="p-4 sm:p-6 border-b border-neutral-200 dark:border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-pink-500/20 text-pink-500 dark:text-pink-400 flex items-center justify-center font-bold">
+            <i data-lucide="trophy" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-neutral-900 dark:text-white tracking-tight">Rendimiento Relativo & Puntos Oficiales</h2>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Puntos DOTS (IPL/WRPF), IPF GL Points (IPF) y Fórmula Wilks</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="inline-flex rounded-xl bg-neutral-100 dark:bg-neutral-950 p-1 border border-neutral-200 dark:border-neutral-800">
+            <button id="dotsGenderMale" onclick="setDotsGender('male')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-pink-600 text-white shadow-sm flex items-center space-x-1.5">
+              <i data-lucide="user" class="w-3.5 h-3.5"></i>
+              <span>Masculino</span>
+            </button>
+            <button id="dotsGenderFemale" onclick="setDotsGender('female')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white flex items-center space-x-1.5">
+              <i data-lucide="user" class="w-3.5 h-3.5"></i>
+              <span>Femenino</span>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl text-xs font-semibold">
+            <span class="text-neutral-500 dark:text-neutral-400">Edad:</span>
+            <input type="number" id="athleteAgeInput" value="0" min="0" max="99" class="w-8 bg-transparent text-neutral-900 dark:text-white font-bold text-center focus:outline-none">
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-4">
+            <div class="sm:col-span-6 bg-neutral-50 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4">
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1">Peso Corporal del Atleta</label>
+              <div class="flex items-baseline justify-between">
+                <input type="number" id="dotsBwInput" step="0.1" min="0" value="0" oninput="calculatePowerliftingPoints()"
+                  class="w-full bg-transparent text-3xl font-black text-neutral-900 dark:text-white font-mono-num focus:outline-none">
+                <span class="text-xs font-black text-neutral-400 unitText">KG</span>
+              </div>
+            </div>
+
+            <div class="sm:col-span-6 bg-neutral-50 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex flex-col justify-between">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold tracking-wider uppercase text-neutral-500 dark:text-neutral-400">Categoría Oficial de Peso</span>
+                <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">IPF Open</span>
+              </div>
+              <div>
+                <div id="categoryLabelDisplay" class="text-2xl font-black text-sky-500 dark:text-sky-400">Sin datos</div>
+                <div id="marginLabelDisplay" class="text-[11px] text-neutral-500 dark:text-neutral-400">Margen al pesaje límite: 0.00 kg</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <div class="bg-neutral-50 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3.5">
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] font-bold text-neutral-700 dark:text-neutral-300">Sentadilla (SQ)</label>
+                <button onclick="setDotsLiftFromBar('squat')" class="text-[10px] text-sky-600 dark:text-sky-400 hover:underline">De barra</button>
+              </div>
+              <input type="number" id="dotsSquatInput" step="0.5" value="0" oninput="calculatePowerliftingPoints()"
+                class="w-full bg-transparent text-2xl font-black text-neutral-900 dark:text-white font-mono-num focus:outline-none">
+            </div>
+
+            <div class="bg-neutral-50 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3.5">
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] font-bold text-neutral-700 dark:text-neutral-300">Banca (BP)</label>
+                <button onclick="setDotsLiftFromBar('bench')" class="text-[10px] text-sky-600 dark:text-sky-400 hover:underline">De barra</button>
+              </div>
+              <input type="number" id="dotsBenchInput" step="0.5" value="0" oninput="calculatePowerliftingPoints()"
+                class="w-full bg-transparent text-2xl font-black text-neutral-900 dark:text-white font-mono-num focus:outline-none">
+            </div>
+
+            <div class="bg-neutral-50 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3.5">
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] font-bold text-neutral-700 dark:text-neutral-300">Muerto (DL)</label>
+                <button onclick="setDotsLiftFromBar('deadlift')" class="text-[10px] text-sky-600 dark:text-sky-400 hover:underline">De barra</button>
+              </div>
+              <input type="number" id="dotsDeadliftInput" step="0.5" value="0" oninput="calculatePowerliftingPoints()"
+                class="w-full bg-transparent text-2xl font-black text-neutral-900 dark:text-white font-mono-num focus:outline-none">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between p-4 rounded-xl bg-neutral-100 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800">
+            <span class="text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Total Powerlifting</span>
+            <div class="flex items-baseline space-x-1.5">
+              <span id="dotsTotalDisplay" class="text-2xl font-black text-neutral-900 dark:text-white font-mono-num">0.0</span>
+              <span class="text-xs font-bold text-neutral-400 unitText">KG</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-neutral-50 dark:bg-neutral-950 border border-pink-500/30 rounded-2xl p-4 glow-dots flex flex-col items-center justify-center text-center">
+              <span class="text-[10px] font-black uppercase tracking-wider text-pink-500 dark:text-pink-400">Puntos DOTS (IPL/WRPF)</span>
+              <div class="text-3xl sm:text-4xl font-black text-[#ff2d78] font-mono-num my-1" id="dotsScoreDisplay">
+                0.00
+              </div>
+            </div>
+
+            <div class="bg-neutral-50 dark:bg-neutral-950 border border-sky-500/30 rounded-2xl p-4 glow-ipf flex flex-col items-center justify-center text-center">
+              <span class="text-[10px] font-black uppercase tracking-wider text-sky-500 dark:text-sky-400">IPF GL Points</span>
+              <div class="text-3xl sm:text-4xl font-black text-sky-500 dark:text-sky-400 font-mono-num my-1" id="ipfGlScoreDisplay">
+                0.00
+              </div>
+              <span class="text-[9px] text-neutral-500 uppercase font-semibold">Fórmula RAW IPF</span>
+            </div>
+          </div>
+
+          <div class="bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl px-5 py-3.5 flex items-center justify-between">
+            <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">Puntos Wilks Clásico:</span>
+            <div class="text-lg font-black text-neutral-800 dark:text-neutral-200 font-mono-num" id="wilksScoreDisplay">0.00</div>
+          </div>
+
+          <div class="bg-neutral-50 dark:bg-neutral-950 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-4 space-y-3">
+            <div class="flex items-center justify-between pb-1">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Nivel de Rendimiento Relativo</span>
+              <span id="dotsCategoryBadge" class="px-2.5 py-0.5 text-xs font-black uppercase tracking-wider rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-700">
+                Sin Clasificar
+              </span>
+            </div>
+
+            <div class="space-y-1 text-xs">
+              <div class="flex justify-between py-1 px-2 rounded font-medium text-neutral-400 dark:text-neutral-500 font-mono-num" id="gl-row-club">
+                <span>&lt; 60.0 pts</span>
+                <span>Iniciación / Club Local</span>
+              </div>
+              <div class="flex justify-between py-1 px-2 rounded font-medium text-neutral-600 dark:text-neutral-400 font-mono-num" id="gl-row-intermedio">
+                <span>60.0 – 72.0 pts</span>
+                <span>Intermedio</span>
+              </div>
+              <div class="flex justify-between py-1 px-2 rounded font-medium text-neutral-600 dark:text-neutral-400 font-mono-num" id="gl-row-nacional">
+                <span>72.1 – 84.0 pts</span>
+                <span>Avanzado / Nacional</span>
+              </div>
+              <div class="flex justify-between py-1 px-2 rounded font-medium text-neutral-600 dark:text-neutral-400 font-mono-num" id="gl-row-elite">
+                <span>84.1 – 95.0 pts</span>
+                <span>Élite</span>
+              </div>
+              <div class="flex justify-between py-1 px-2 rounded font-medium text-neutral-600 dark:text-neutral-400 font-mono-num" id="gl-row-mundial">
+                <span>&gt; 95.0 pts</span>
+                <span>Clase Mundial</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 5: EVALUADOR DE REPETICIONES & TIER DE PODER -->
+    <section class="bg-gradient-to-b from-white to-neutral-50 dark:from-neutral-900/90 dark:to-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 sm:p-7 space-y-6 shadow-2xl overflow-hidden relative transition-colors duration-200">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-neutral-200 dark:border-neutral-800">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 dark:text-amber-400 flex items-center justify-center text-xl shadow-inner">
+            ⚔️
+          </div>
+          <div>
+            <h2 class="text-lg sm:text-xl font-black text-neutral-900 dark:text-white tracking-tight">Evaluador de Repeticiones & Rango de Poder</h2>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Ingresa peso y repeticiones de cualquier ejercicio para calcular tu 1RM estimado y desbloquear tu Rango de Fuerza Relativa.</p>
+          </div>
+        </div>
+
+        <div id="godBadge" class="self-start sm:self-auto px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase border bg-neutral-100 dark:bg-zinc-800 text-neutral-600 dark:text-zinc-400 border-neutral-300 dark:border-zinc-700 transition-all duration-300">
+          SIN CLASIFICAR
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-neutral-50 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4">
+          <label class="block text-[10px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1.5">Ejercicio</label>
+          <select id="evalExercise" onchange="calculatePowerTier()" class="w-full bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs font-bold text-neutral-900 dark:text-white focus:outline-none focus:border-pink-500 transition">
+            <option value="bench">Press de Banca (BP)</option>
+            <option value="squat">Sentadilla (SQ)</option>
+            <option value="deadlift">Peso Muerto (DL)</option>
+            <option value="ohp">Press Militar (OHP)</option>
+            <option value="chinup">Dominada Lastrada (Total)</option>
+          </select>
+        </div>
+
+        <div class="bg-neutral-50 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4">
+          <label class="block text-[10px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1.5">Carga Levantada</label>
+          <div class="relative">
+            <input type="number" id="evalWeight" value="0" step="2.5" min="0" oninput="calculatePowerTier()" class="w-full bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-base font-black text-neutral-900 dark:text-white font-mono-num focus:outline-none focus:border-pink-500 transition">
+            <span class="absolute right-3 top-2 text-xs font-bold text-neutral-400 unitText">KG</span>
+          </div>
+        </div>
+
+        <div class="bg-neutral-50 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4">
+          <label class="block text-[10px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1.5">Repeticiones Logradas</label>
+          <input type="number" id="evalReps" value="0" min="0" max="25" oninput="calculatePowerTier()" class="w-full bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-base font-black text-neutral-900 dark:text-white font-mono-num focus:outline-none focus:border-pink-500 transition">
+        </div>
+
+        <div class="bg-neutral-50 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex flex-col justify-center items-center text-center">
+          <span class="text-[10px] font-black uppercase tracking-wider text-neutral-500 dark:text-neutral-400">1RM Estimado (Epley)</span>
+          <div class="text-2xl font-black text-neutral-900 dark:text-white mt-0.5 font-mono-num">
+            <span id="eval1RM" class="text-pink-500 dark:text-pink-400">0.0</span> <span class="text-xs font-semibold text-neutral-400 unitText">KG</span>
+          </div>
+          <span id="brzyckiRM" class="text-[9px] text-neutral-500 font-semibold font-mono-num">Brzycki: 0.0 kg</span>
+        </div>
+      </div>
+
+      <div id="godCard" class="p-5 sm:p-6 rounded-2xl border border-neutral-300 dark:border-zinc-800 bg-neutral-100 dark:bg-[#161720] flex flex-col md:flex-row items-center justify-between gap-5 transition-all duration-300">
+        <div class="flex items-center gap-4">
+          <div id="godIcon" class="w-16 h-16 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center text-3xl shadow-xl shrink-0">
+            🛡️
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-black uppercase tracking-widest text-neutral-500 dark:text-neutral-400">Nivel de Fuerza Desbloqueado</span>
+              <span id="godTierBadge" class="text-[9px] px-2 py-0.5 rounded font-black uppercase bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-700 font-mono-num">Tier C</span>
+            </div>
+            <h3 id="godTitle" class="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white tracking-tight mt-0.5">Ingresa tus datos</h3>
+            <p id="godDesc" class="text-xs text-neutral-600 dark:text-neutral-400 max-w-xl mt-1">
+              Coloca una carga y repeticiones realizadas para evaluar tu poder relativo.
+            </p>
+          </div>
+        </div>
+
+        <div class="w-full md:w-64 bg-white/80 dark:bg-neutral-950/90 border border-neutral-200 dark:border-neutral-800 p-3.5 rounded-xl space-y-2">
+          <div class="flex justify-between text-xs font-bold font-mono-num">
+            <span class="text-neutral-500 dark:text-neutral-400">Fuerza Relativa:</span>
+            <span id="godRatio" class="text-pink-500 dark:text-pink-400">0.00x BW</span>
+          </div>
+          <div class="w-full bg-neutral-200 dark:bg-neutral-800 rounded-full h-2 overflow-hidden">
+            <div id="godProgressBar" class="h-full bg-gradient-to-r from-pink-500 via-amber-400 to-yellow-300 rounded-full transition-all duration-500" style="width: 0%;"></div>
+          </div>
+          <div class="flex justify-between text-[9px] text-neutral-400 dark:text-neutral-500 font-bold uppercase tracking-wider font-mono-num">
+            <span>Recluta Bronce</span>
+            <span>Dios Primigenio</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 6: GUÍA OFICIAL DE FEDERACIONES DE POWERLIFTING -->
+    <section class="bg-white dark:bg-neutral-900/90 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xl overflow-hidden backdrop-blur-sm p-4 sm:p-6 space-y-6 transition-colors duration-200">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-500 dark:text-sky-400 flex items-center justify-center font-bold">
+            <i data-lucide="shield" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-neutral-900 dark:text-white tracking-tight">Federaciones Oficiales de Powerlifting</h2>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Reglamentos, controles antidopaje WADA/AMA, equipamiento y filiales internacionales</p>
+          </div>
+        </div>
+
+        <div class="inline-flex rounded-xl bg-neutral-100 dark:bg-neutral-950 p-1 border border-neutral-200 dark:border-neutral-800 text-xs">
+          <button id="fedTabAll" onclick="filterFedCards('all')" class="px-3 py-1 rounded-lg font-bold transition-all bg-sky-600 text-white shadow-sm">
+            Todas
+          </button>
+          <button id="fedTabTested" onclick="filterFedCards('tested')" class="px-3 py-1 rounded-lg font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white">
+            Testeada (WADA)
+          </button>
+          <button id="fedTabOpen" onclick="filterFedCards('open')" class="px-3 py-1 rounded-lg font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white">
+            Untested / Pro
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="fedCardsGrid">
+        <!-- IPF -->
+        <div class="fed-card bg-neutral-50 dark:bg-neutral-950 border border-sky-500/40 rounded-2xl p-5 space-y-4 hover:border-sky-500 transition-all shadow-md shadow-sky-500/5 dark:shadow-sky-950/20" data-tested="true">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30">
+              Reconocida por el COI
+            </span>
+            <span class="text-xs font-mono-num font-bold text-neutral-400">1972</span>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-extrabold text-neutral-900 dark:text-white flex items-center gap-2">
+              <span>IPF</span>
+              <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400">(International Powerlifting Fed)</span>
+            </h3>
+            <p class="text-xs text-neutral-600 dark:text-neutral-300 mt-1 leading-relaxed">
+              El organismo deportivo oficial con mayor estructura a nivel global. Presente en los <em>The World Games</em> y regido 100% bajo el código de la Agencia Mundial Antidopaje (WADA/AMA).
+            </p>
+          </div>
+
+          <div class="space-y-1.5 text-[11px] border-t border-neutral-200 dark:border-neutral-800/80 pt-3 text-neutral-700 dark:text-neutral-300">
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Antidopaje:</span>
+              <span class="font-bold text-emerald-600 dark:text-emerald-400">WADA Estricto (In/Out meet)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Barras:</span>
+              <span class="font-mono-num">Barra rígida 29mm (3 lifts)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Rack Sentadilla:</span>
+              <span class="font-semibold">Walk-out tradicional (ER Racks)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Equipamiento:</span>
+              <span class="font-semibold">Lista homologada oficial anual</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Filial en Chile / Latam:</span>
+              <span class="font-bold text-sky-600 dark:text-sky-400">FECHIPO / FESUPO</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- USAPL -->
+        <div class="fed-card bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 space-y-4 hover:border-neutral-400 dark:hover:border-neutral-700 transition-all" data-tested="true">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
+              Circuito Independiente Testeado
+            </span>
+            <span class="text-xs font-mono-num font-bold text-neutral-400">1997</span>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-extrabold text-neutral-900 dark:text-white flex items-center gap-2">
+              <span>USAPL</span>
+              <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400">(USA Powerlifting)</span>
+            </h3>
+            <p class="text-xs text-neutral-600 dark:text-neutral-300 mt-1 leading-relaxed">
+              Históricamente la mayor potencia en levantamiento probado en Norteamérica. Separada de IPF en 2021, opera a nivel global con su propia política antidrogas y torneos masivos como el <em>Pro Meet</em>.
+            </p>
+          </div>
+
+          <div class="space-y-1.5 text-[11px] border-t border-neutral-200 dark:border-neutral-800/80 pt-3 text-neutral-700 dark:text-neutral-300">
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Antidopaje:</span>
+              <span class="font-bold text-emerald-600 dark:text-emerald-400">Control estricto interno</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Barras:</span>
+              <span class="font-mono-num">Barra estándar (Eleiko/Rogue)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Rack Sentadilla:</span>
+              <span class="font-semibold">Walk-out estándar</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Puntaje Oficial:</span>
+              <span class="font-bold text-indigo-600 dark:text-indigo-400">Fórmula DOTS</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- WRPF -->
+        <div class="fed-card bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 space-y-4 hover:border-neutral-400 dark:hover:border-neutral-700 transition-all" data-tested="false">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+              Tested & Untested
+            </span>
+            <span class="text-xs font-mono-num font-bold text-neutral-400">2014</span>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-extrabold text-neutral-900 dark:text-white flex items-center gap-2">
+              <span>WRPF</span>
+              <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400">(World Raw Powerlifting Fed)</span>
+            </h3>
+            <p class="text-xs text-neutral-600 dark:text-neutral-300 mt-1 leading-relaxed">
+              Fundada por Kirill Sarychev. Es el epicentro de la cultura de fuerza contemporánea de récords mundiales pesados, con espectáculos de tarima de alta producción, divisiones libres y testeada.
+            </p>
+          </div>
+
+          <div class="space-y-1.5 text-[11px] border-t border-neutral-200 dark:border-neutral-800/80 pt-3 text-neutral-700 dark:text-neutral-300">
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Divisiones:</span>
+              <span class="font-bold text-rose-600 dark:text-rose-400">Tested & Untested</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Barras:</span>
+              <span class="font-mono-num">Squat Bar (32mm) & Deadlift Bar</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Rack:</span>
+              <span class="font-semibold">Mono-lift permitido en SQ</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Modalidades:</span>
+              <span class="font-semibold">Raw (Sleeves) & Classic (Wraps)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- IPL / USPA -->
+        <div class="fed-card bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 space-y-4 hover:border-neutral-400 dark:hover:border-neutral-700 transition-all" data-tested="false">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+              Circuito Comercial Global
+            </span>
+            <span class="text-xs font-mono-num font-bold text-neutral-400">IPL</span>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-extrabold text-neutral-900 dark:text-white flex items-center gap-2">
+              <span>IPL / USPA</span>
+              <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400">(International Powerlifting League)</span>
+            </h3>
+            <p class="text-xs text-neutral-600 dark:text-neutral-300 mt-1 leading-relaxed">
+              Gran red de competiciones presente en América, Europa y Oceanía. Permite uso de barra de peso muerto (*deadlift bar* más elástica) y categoría *Classic Raw* con rodilleras de venda.
+            </p>
+          </div>
+
+          <div class="space-y-1.5 text-[11px] border-t border-neutral-200 dark:border-neutral-800/80 pt-3 text-neutral-700 dark:text-neutral-300">
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Divisiones:</span>
+              <span class="font-bold text-amber-600 dark:text-amber-400">Tested & Non-Tested</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Barras:</span>
+              <span class="font-mono-num">Deadlift bar con látigo en DL</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Categorías:</span>
+              <span class="font-mono-num">-90kg, -100kg, -110kg...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- WPC / AWPC -->
+        <div class="fed-card bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 space-y-4 hover:border-neutral-400 dark:hover:border-neutral-700 transition-all" data-tested="false">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+              Cuna del Equipamiento
+            </span>
+            <span class="text-xs font-mono-num font-bold text-neutral-400">1986</span>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-extrabold text-neutral-900 dark:text-white flex items-center gap-2">
+              <span>WPC / AWPC</span>
+              <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400">(World Powerlifting Congress)</span>
+            </h3>
+            <p class="text-xs text-neutral-600 dark:text-neutral-300 mt-1 leading-relaxed">
+              Federación pionera de levantamiento sin restricciones. AWPC es su división amateur con control antidrogas, mientras WPC alberga levantamientos con equipamiento extremo (*Multi-Ply*).
+            </p>
+          </div>
+
+          <div class="space-y-1.5 text-[11px] border-t border-neutral-200 dark:border-neutral-800/80 pt-3 text-neutral-700 dark:text-neutral-300">
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Dopaje:</span>
+              <span class="font-semibold">WPC (Libre) / AWPC (Testeada)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Equipamiento:</span>
+              <span class="font-semibold">Raw, Single-Ply y Multi-Ply</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Rack:</span>
+              <span class="font-semibold">Mono-lift estándar</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- GPC -->
+        <div class="fed-card bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 space-y-4 hover:border-neutral-400 dark:hover:border-neutral-700 transition-all" data-tested="false">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-neutral-200 dark:bg-zinc-800 text-neutral-700 dark:text-zinc-300 border border-neutral-300 dark:border-zinc-700">
+              Reglamento Permisivo
+            </span>
+            <span class="text-xs font-mono-num font-bold text-neutral-400">GPC</span>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-extrabold text-neutral-900 dark:text-white flex items-center gap-2">
+              <span>GPC</span>
+              <span class="text-xs font-medium text-neutral-500 dark:text-neutral-400">(Global Powerlifting Committee)</span>
+            </h3>
+            <p class="text-xs text-neutral-600 dark:text-neutral-300 mt-1 leading-relaxed">
+              Enfocada en el levantamiento pesado con barras especializadas, uso de monolift en sentadilla y vendajes de rodilla (*knee wraps*) sin requerir marcas homologadas costosas.
+            </p>
+          </div>
+
+          <div class="space-y-1.5 text-[11px] border-t border-neutral-200 dark:border-neutral-800/80 pt-3 text-neutral-700 dark:text-neutral-300">
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Dopaje:</span>
+              <span class="font-semibold">Untested principal</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Indumentaria:</span>
+              <span class="font-semibold">Marcas genéricas permitidas</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-neutral-500">Soportes:</span>
+              <span class="font-semibold">Monolift & Deadlift Bar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-neutral-50 dark:bg-neutral-950 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-4 overflow-x-auto">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-3">Diferencias Técnicas Clave entre Circuitos</h3>
+        <table class="w-full text-xs text-left">
+          <thead>
+            <tr class="text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-800 font-mono-num">
+              <th class="pb-2">Parámetro</th>
+              <th class="pb-2 text-sky-600 dark:text-sky-400 font-bold">Circuito IPF / FECHIPO</th>
+              <th class="pb-2 text-pink-600 dark:text-pink-400 font-bold">Ligas Libres (WRPF, IPL, WPC)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-200 dark:divide-neutral-900 text-neutral-700 dark:text-neutral-300">
+            <tr>
+              <td class="py-2 font-semibold">Control de Dopaje</td>
+              <td class="text-emerald-600 dark:text-emerald-400 font-bold">Obligatorio (Código WADA Olímpico)</td>
+              <td>Opcional (divisiones Tested y Untested)</td>
+            </tr>
+            <tr>
+              <td class="py-2 font-semibold">Soporte de Sentadilla</td>
+              <td>Rack tradicional (caminar hacia atrás / walk-out)</td>
+              <td>Monolift permitido (sin caminar con la barra)</td>
+            </tr>
+            <tr>
+              <td class="py-2 font-semibold">Barras Oficiales</td>
+              <td>Misma barra rígida de 29 mm para los 3 ejercicios</td>
+              <td>Squat Bar (32 mm rígida) + Deadlift Bar (flexible con flex)</td>
+            </tr>
+            <tr>
+              <td class="py-2 font-semibold">Rodilleras en RAW</td>
+              <td>Mangas elásticas homologadas (Sleeves 7 mm máx)</td>
+              <td>Sleeves o Vendas de compresión (Knee Wraps)</td>
+            </tr>
+            <tr>
+              <td class="py-2 font-semibold">Marcas de Ropa/Cinturón</td>
+              <td class="text-amber-600 dark:text-amber-400 font-medium">Solo marcas aprobadas en lista oficial anual</td>
+              <td>Cualquier marca que respete medidas estándar</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 7: CONVERTIDOR UNIVERSAL KG ⇄ LBS & HITOS -->
+    <section class="bg-white dark:bg-neutral-900/90 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-xl overflow-hidden backdrop-blur-sm p-4 sm:p-6 transition-colors duration-200">
+      <div class="flex items-center space-x-2 mb-6">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 flex items-center justify-center font-bold">
+          <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <h2 class="text-lg font-bold text-neutral-900 dark:text-white tracking-tight">Convertidor Inmediato & Hitos de Gimnasio</h2>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">Conversión exacta estándar (1 kg = 2.20462262 lb)</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-neutral-50 dark:bg-neutral-950 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800">
+              <label class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 mb-1">Kilogramos (KG)</label>
+              <input type="number" id="convKgInput" step="0.1" value="0" oninput="onConvertInput('kg')"
+                class="w-full bg-transparent text-2xl font-black text-neutral-900 dark:text-white font-mono-num focus:outline-none">
+            </div>
+
+            <div class="bg-neutral-50 dark:bg-neutral-950 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800">
+              <label class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 mb-1">Libras (LBS)</label>
+              <input type="number" id="convLbInput" step="0.1" value="0" oninput="onConvertInput('lb')"
+                class="w-full bg-transparent text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono-num focus:outline-none">
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button onclick="setConvWeight(60)" class="px-2.5 py-1 rounded bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-xs text-neutral-700 dark:text-neutral-300 font-mono-num font-medium">60 kg (132 lb)</button>
+            <button onclick="setConvWeight(100)" class="px-2.5 py-1 rounded bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-xs text-neutral-700 dark:text-neutral-300 font-mono-num font-medium">100 kg (220 lb)</button>
+            <button onclick="setConvWeight(140)" class="px-2.5 py-1 rounded bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-xs text-neutral-700 dark:text-neutral-300 font-mono-num font-medium">140 kg (310 lb)</button>
+            <button onclick="setConvWeight(180)" class="px-2.5 py-1 rounded bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-xs text-neutral-700 dark:text-neutral-300 font-mono-num font-medium">180 kg (396 lb)</button>
+            <button onclick="setConvWeight(220)" class="px-2.5 py-1 rounded bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-xs text-neutral-700 dark:text-neutral-300 font-mono-num font-medium">220 kg (485 lb)</button>
+          </div>
+        </div>
+
+        <div class="bg-neutral-50 dark:bg-neutral-950 rounded-xl border border-neutral-200 dark:border-neutral-800 p-3 overflow-x-auto">
+          <div class="text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-2">Equivalencias Clásicas ("Platos por Lado")</div>
+          <table class="w-full text-xs text-left">
+            <thead>
+              <tr class="text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-800 font-mono-num">
+                <th class="pb-1.5">Discos de 20kg / 45lb</th>
+                <th class="pb-1.5">Libras</th>
+                <th class="pb-1.5">Kilos</th>
+                <th class="pb-1.5 text-right">Cargar</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-neutral-200 dark:divide-neutral-900 font-mono-num text-neutral-700 dark:text-neutral-300">
+              <tr>
+                <td class="py-1.5 font-bold">1 Plato (1x lado)</td>
+                <td>135 lbs</td>
+                <td>60 kg</td>
+                <td class="text-right"><button onclick="setBarWeightFromNumber(60)" class="text-blue-600 dark:text-blue-400 hover:underline">Usar</button></td>
+              </tr>
+              <tr>
+                <td class="py-1.5 font-bold">2 Platos (2x lado)</td>
+                <td>225 lbs</td>
+                <td>100 kg</td>
+                <td class="text-right"><button onclick="setBarWeightFromNumber(100)" class="text-blue-600 dark:text-blue-400 hover:underline">Usar</button></td>
+              </tr>
+              <tr>
+                <td class="py-1.5 font-bold">3 Platos (3x lado)</td>
+                <td>315 lbs</td>
+                <td>140 kg</td>
+                <td class="text-right"><button onclick="setBarWeightFromNumber(140)" class="text-blue-600 dark:text-blue-400 hover:underline">Usar</button></td>
+              </tr>
+              <tr>
+                <td class="py-1.5 font-bold">4 Platos (4x lado)</td>
+                <td>405 lbs</td>
+                <td>180 kg</td>
+                <td class="text-right"><button onclick="setBarWeightFromNumber(180)" class="text-blue-600 dark:text-blue-400 hover:underline">Usar</button></td>
+              </tr>
+              <tr>
+                <td class="py-1.5 font-bold">5 Platos (5x lado)</td>
+                <td>495 lbs</td>
+                <td>220 kg</td>
+                <td class="text-right"><button onclick="setBarWeightFromNumber(220)" class="text-blue-600 dark:text-blue-400 hover:underline">Usar</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 8: BUY ME A COFFEE / DONACIÓN PAYPAL (GUSTAVO) -->
+    <section class="bg-gradient-to-r from-amber-500/10 via-amber-600/5 to-transparent dark:from-amber-950/30 dark:via-neutral-900 dark:to-neutral-950 rounded-3xl border border-amber-400/40 dark:border-amber-500/30 shadow-2xl p-6 sm:p-8 backdrop-blur-sm transition-colors duration-200">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        
+        <div class="flex items-start space-x-4 max-w-2xl">
+          <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-500 dark:text-amber-400 flex items-center justify-center text-3xl shadow-inner shrink-0">
+            ☕
+          </div>
+          <div class="space-y-1.5">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+              <span>Buy Me a Coffee</span>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white tracking-tight">¿Te sirvió la calculadora para tus entrenamientos?</h2>
+            <p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              Mantener esta herramienta rápida, sin anuncios molestos y con fórmulas oficiales requiere tiempo de desarrollo y servidores. Si te ayuda a calcular tus barras y progresiones, ¡invítame un café o pre-entreno!
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+          <a id="paypalMainBtn" href="https://www.paypal.me/GustavoFigueroaOlmos/3" target="_blank" rel="noopener noreferrer"
+            class="w-full sm:w-auto inline-flex items-center justify-center space-x-2.5 px-6 py-3.5 rounded-2xl bg-[#0070ba] hover:bg-[#005ea6] text-white font-extrabold text-sm shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+              <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72a.78.78 0 0 1 .77-.655h7.24c3.486 0 5.86 1.637 5.485 5.044-.32 2.894-2.176 4.54-4.887 4.54H9.72l-1.397 7.944a.78.78 0 0 1-.77.656l-.477.088zm1.905-10.77h3.125c1.782 0 3.018-.77 3.253-2.618.23-1.808-.82-2.73-2.73-2.73H7.87L5.865 17.587h2.368l.748-7.02z"/>
+            </svg>
+            <span>Invítame un Café vía PayPal</span>
+          </a>
+
+          <div class="flex items-center bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 p-1 rounded-2xl shadow-sm">
+            <button onclick="setDonationAmount(3)" class="donation-btn px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-amber-500 text-white shadow-sm" data-amount="3">$3</button>
+            <button onclick="setDonationAmount(5)" class="donation-btn px-3 py-1.5 rounded-xl text-xs font-bold transition-all text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white" data-amount="5">$5</button>
+            <button onclick="setDonationAmount(10)" class="donation-btn px-3 py-1.5 rounded-xl text-xs font-bold transition-all text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white" data-amount="10">$10</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="border-t border-neutral-200 dark:border-neutral-800 bg-white/60 dark:bg-neutral-900/60 mt-12 py-8 transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center text-xs text-neutral-500 dark:text-neutral-400 space-y-2">
+      <p>IronForge Barbell &copy; 2026. Herramienta de fuerza y rendimiento deportivo.</p>
+      <p>Fórmulas: RTS RPE Scale (Mike Tuchscherer), RIR Scale, Smolov Jr, Bilbo, Wendler 5/3/1, DOTS Oficial, IPF GL Points RAW & Wilks Clásico.</p>
+    </div>
+  </footer>
+
+  <!-- =========================================================
+       3. MOTOR DE LÓGICA Y JAVASCRIPT
+       ========================================================= -->
+  <script>
+    let currentUnit = 'kg';
+    let currentPlateType = 'ipf';
+    let currentProgMethod = 'smolov';
+    let currentEffortMode = 'rpe';
+    let dotsGender = 'male';
+
+    const PAYPAL_USERNAME = 'GustavoFigueroaOlmos';
+    const MAX_LOAD_LIMIT_KG = 600; // Límite de carga estructural estándar de barra
+
+    function setDonationAmount(amount) {
+      const btn = document.getElementById('paypalMainBtn');
+      btn.href = `https://paypal.me/${PAYPAL_USERNAME}/${amount}`;
+      
+      const buttons = document.querySelectorAll('.donation-btn');
+      buttons.forEach(b => {
+        const isCurrent = parseInt(b.getAttribute('data-amount')) === amount;
+        b.className = isCurrent 
+          ? 'donation-btn px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-amber-500 text-white shadow-sm'
+          : 'donation-btn px-3 py-1.5 rounded-xl text-xs font-bold transition-all text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white';
+      });
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const themeIcon = document.getElementById('themeIcon');
+      
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+        themeIcon.setAttribute('data-lucide', 'moon');
+      } else {
+        html.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+        themeIcon.setAttribute('data-lucide', 'sun');
+      }
+      lucide.createIcons();
+    }
+
+    const PLATE_SPECS_KG = [
+      { weight: 25,   color: 'red',    name: '25 kg',   height: 190, widthIpf: 18, widthComm: 28, enabled: true,  isIpfOnly: true },
+      { weight: 20,   color: 'blue',   name: '20 kg',   height: 190, widthIpf: 16, widthComm: 26, enabled: true,  isIpfOnly: false },
+      { weight: 15,   color: 'yellow', name: '15 kg',   height: 165, widthIpf: 14, widthComm: 22, enabled: true,  isIpfOnly: false },
+      { weight: 10,   color: 'green',  name: '10 kg',   height: 140, widthIpf: 12, widthComm: 18, enabled: true,  isIpfOnly: false },
+      { weight: 5,    color: 'white',  name: '5 kg',    height: 105, widthIpf: 10, widthComm: 15, enabled: true,  isIpfOnly: false },
+      { weight: 2.5,  color: 'black',  name: '2.5 kg',  height: 85,  widthIpf: 9,  widthComm: 13, enabled: true,  isIpfOnly: false },
+      { weight: 1.25, color: 'chrome', name: '1.25 kg', height: 70,  widthIpf: 8,  widthComm: 11, enabled: true,  isIpfOnly: false },
+      { weight: 0.5,  color: 'chrome', name: '0.5 kg',  height: 55,  widthIpf: 6,  widthComm: 8,  enabled: true,  isIpfOnly: true },
+      { weight: 0.25, color: 'chrome', name: '0.25 kg', height: 45,  widthIpf: 5,  widthComm: 7,  enabled: true,  isIpfOnly: true },
+    ];
+
+    const PLATE_SPECS_LB = [
+      { weight: 55,   color: 'red',    name: '55 lb',   height: 190, widthIpf: 18, widthComm: 28, enabled: true,  isIpfOnly: true },
+      { weight: 45,   color: 'blue',   name: '45 lb',   height: 190, widthIpf: 17, widthComm: 26, enabled: true,  isIpfOnly: false },
+      { weight: 35,   color: 'yellow', name: '35 lb',   height: 165, widthIpf: 15, widthComm: 22, enabled: true,  isIpfOnly: false },
+      { weight: 25,   color: 'green',  name: '25 lb',   height: 140, widthIpf: 13, widthComm: 18, enabled: true,  isIpfOnly: false },
+      { weight: 10,   color: 'white',  name: '10 lb',   height: 105, widthIpf: 10, widthComm: 15, enabled: true,  isIpfOnly: false },
+      { weight: 5,    color: 'black',  name: '5 lb',    height: 85,  widthIpf: 9,  widthComm: 13, enabled: true,  isIpfOnly: false },
+      { weight: 2.5,  color: 'chrome', name: '2.5 lb',  height: 70,  widthIpf: 8,  widthComm: 11, enabled: true,  isIpfOnly: false },
+      { weight: 1.25, color: 'chrome', name: '1.25 lb', height: 55,  widthIpf: 6,  widthComm: 8,  enabled: true,  isIpfOnly: true },
+    ];
+
+    let CUSTOM_PLATES_KG = [
+      { weight: 20.4, color: 'custom-purple', name: '20.4 kg (45 lb aprox)', height: 190, widthIpf: 24, widthComm: 26, enabled: true },
+      { weight: 11.2, color: 'custom-teal',   name: '11.2 kg (25 lb aprox)', height: 145, widthIpf: 18, widthComm: 20, enabled: true },
+      { weight: 10.4, color: 'custom-orange', name: '10.4 kg',               height: 140, widthIpf: 16, widthComm: 18, enabled: true },
+      { weight: 5.0,  color: 'white',         name: '5.0 kg',                height: 105, widthIpf: 10, widthComm: 14, enabled: true },
+      { weight: 2.5,  color: 'black',         name: '2.5 kg',                height: 85,  widthIpf: 9,  widthComm: 12, enabled: true },
+      { weight: 1.25, color: 'chrome',        name: '1.25 kg',               height: 70,  widthIpf: 8,  widthComm: 10, enabled: true }
+    ];
+
+    let CUSTOM_PLATES_LB = [
+      { weight: 45.0, color: 'blue',          name: '45 lb',                 height: 190, widthIpf: 24, widthComm: 26, enabled: true },
+      { weight: 44.0, color: 'custom-purple', name: '44 lb (20 kg)',         height: 190, widthIpf: 22, widthComm: 25, enabled: true },
+      { weight: 35.0, color: 'yellow',        name: '35 lb',                 height: 165, widthIpf: 18, widthComm: 22, enabled: true },
+      { weight: 2.5,  color: 'chrome',        name: '2.5 lb',                height: 70,  widthIpf: 8,  widthComm: 10, enabled: true }
+    ];
+
+    const RTS_PERCENTAGES = {
+      1:  { 10: 1.000, 9.5: 0.978, 9: 0.955, 8.5: 0.939, 8: 0.922, 7.5: 0.907, 7: 0.892, 6.5: 0.878, 6: 0.863 },
+      2:  { 10: 0.955, 9.5: 0.939, 9: 0.922, 8.5: 0.907, 8: 0.892, 7.5: 0.878, 7: 0.863, 6.5: 0.849, 6: 0.835 },
+      3:  { 10: 0.922, 9.5: 0.907, 9: 0.892, 8.5: 0.878, 8: 0.863, 7.5: 0.849, 7: 0.835, 6.5: 0.821, 6: 0.807 },
+      4:  { 10: 0.892, 9.5: 0.878, 9: 0.863, 8.5: 0.849, 8: 0.835, 7.5: 0.821, 7: 0.807, 6.5: 0.793, 6: 0.779 },
+      5:  { 10: 0.863, 9.5: 0.849, 9: 0.835, 8.5: 0.821, 8: 0.807, 7.5: 0.793, 7: 0.779, 6.5: 0.765, 6: 0.751 },
+      6:  { 10: 0.835, 9.5: 0.821, 9: 0.807, 8.5: 0.793, 8: 0.779, 7.5: 0.765, 7: 0.751, 6.5: 0.737, 6: 0.723 },
+      7:  { 10: 0.807, 9.5: 0.793, 9: 0.779, 8.5: 0.765, 8: 0.751, 7.5: 0.737, 7: 0.723, 6.5: 0.709, 6: 0.695 },
+      8:  { 10: 0.779, 9.5: 0.765, 9: 0.751, 8.5: 0.737, 8: 0.723, 7.5: 0.709, 7: 0.695, 6.5: 0.680, 6: 0.666 },
+      9:  { 10: 0.751, 9.5: 0.737, 9: 0.723, 8.5: 0.709, 8: 0.695, 7.5: 0.680, 7: 0.666, 6.5: 0.652, 6: 0.638 },
+      10: { 10: 0.723, 9.5: 0.709, 9: 0.695, 8.5: 0.680, 8: 0.666, 7.5: 0.652, 7: 0.638, 6.5: 0.624, 6: 0.610 },
+      11: { 10: 0.695, 9.5: 0.680, 9: 0.666, 8.5: 0.652, 8: 0.638, 7.5: 0.624, 7: 0.610, 6.5: 0.596, 6: 0.582 },
+      12: { 10: 0.666, 9.5: 0.652, 9: 0.638, 8.5: 0.624, 8: 0.610, 7.5: 0.596, 7: 0.582, 6.5: 0.568, 6: 0.554 }
+    };
+
+    const IPF_GL_PARAMS = {
+      male: { A: 1199.37, B: 1025.18, C: 0.00921 },
+      female: { A: 610.327, B: 1045.5, C: 0.03048 }
+    };
+
+    const WILKS_PARAMS = {
+      male: [-216.0475144, 16.2606339, -0.002388645, -0.00113732, 7.01863e-6, -1.291e-8],
+      female: [594.31747775582, -27.23842536447, 0.82112226871, -0.00930733913, 0.00004731582, -9.054e-8]
+    };
+
+    const TIERS_PODER = [
+      {
+        minScore: 2.30,
+        tierName: "Tier 神 (DIOS)",
+        title: "DIOS DEL OLIMPO / PRIMIGENIO",
+        desc: "Tu fuerza rompe las leyes naturales. Una hazaña reservada para leyendas míticas del hierro.",
+        icon: "⚡",
+        badgeClass: "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500",
+        containerStyle: "border-amber-500/50 bg-amber-500/5 dark:bg-amber-950/10 glow-god",
+        progress: 100
+      },
+      {
+        minScore: 1.95,
+        tierName: "Tier S+",
+        title: "Titán Mítico / Semidiós",
+        desc: "Poder monstruoso. Superas holgadamente el estándar de atletas élite nacionales e internacionales.",
+        icon: "👹",
+        badgeClass: "bg-red-500/20 text-red-700 dark:text-red-400 border-red-500",
+        containerStyle: "border-red-500/40 bg-red-500/5 dark:bg-red-950/10 glow-titan",
+        progress: 86
+      },
+      {
+        minScore: 1.65,
+        tierName: "Tier S",
+        title: "Coloso de Diamante",
+        desc: "Fuerza formidable de calibre competitivo nacional. Tu control técnico y capacidad de empuje son formidables.",
+        icon: "💎",
+        badgeClass: "bg-sky-500/20 text-sky-700 dark:text-sky-300 border-sky-500",
+        containerStyle: "border-sky-500/40 bg-sky-500/5 dark:bg-sky-950/10 glow-colossus",
+        progress: 72
+      },
+      {
+        minScore: 1.35,
+        tierName: "Tier A",
+        title: "Guerrero de Oro",
+        desc: "Nivel intermedio-avanzado consolidado. Mucho más fuerte que el 90% de los practicantes de gimnasio.",
+        icon: "🥇",
+        badgeClass: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500",
+        containerStyle: "border-yellow-600/30 bg-neutral-100 dark:bg-[#161720]",
+        progress: 55
+      },
+      {
+        minScore: 1.05,
+        tierName: "Tier B",
+        title: "Gladiador de Plata",
+        desc: "Excelente base de fuerza funcional. Ya dominas cargas considerables en relación a tu peso corporal.",
+        icon: "🥈",
+        badgeClass: "bg-slate-400/20 text-slate-700 dark:text-slate-300 border-slate-400",
+        containerStyle: "border-slate-400 dark:border-slate-700/40 bg-neutral-100 dark:bg-[#161720]",
+        progress: 38
+      },
+      {
+        minScore: 0.0,
+        tierName: "Tier C",
+        title: "Recluta de Bronce",
+        desc: "Primeros pasos en la senda de la fuerza. La constancia y la progresión técnica abrirán los siguientes rangos.",
+        icon: "🥉",
+        badgeClass: "bg-amber-800/20 text-amber-700 dark:text-amber-500 border-amber-800",
+        containerStyle: "border-neutral-300 dark:border-[#272935] bg-neutral-100 dark:bg-[#161720]",
+        progress: 20
+      }
+    ];
+
+    const EXERCISE_WEIGHTS = {
+      bench: 1.35,
+      ohp: 2.1,
+      squat: 1.0,
+      deadlift: 0.85,
+      chinup: 1.15
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light') {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+      } else {
+        document.documentElement.classList.add('dark');
+        document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+      }
+
+      setDonationAmount(3);
+      lucide.createIcons();
+      applyPlatePreset(currentPlateType);
+      calculateLoad();
+      calculateEffort();
+      calculateProgression();
+      calculatePowerliftingPoints();
+      calculatePowerTier();
+    });
+
+    function setPlateType(type) {
+      currentPlateType = type;
+      const btnIpf = document.getElementById('typeBtnIpf');
+      const btnComm = document.getElementById('typeBtnComm');
+      const btnCustom = document.getElementById('typeBtnCustom');
+      const notice = document.getElementById('plateTypeNotice');
+      const customManager = document.getElementById('customPlatesManager');
+
+      const inactiveClass = 'px-3 py-1 rounded-md font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white flex items-center space-x-1.5';
+      const activeClass = 'px-3 py-1 rounded-md font-bold transition-all bg-blue-600 text-white shadow-sm flex items-center space-x-1.5';
+
+      btnIpf.className = inactiveClass;
+      btnComm.className = inactiveClass;
+      btnCustom.className = inactiveClass;
+
+      if (type === 'ipf') {
+        btnIpf.className = activeClass;
+        notice.innerText = 'Discos oficiales calibrados IPF (25kg - 0.25kg)';
+        customManager.classList.add('hidden');
+      } else if (type === 'commercial') {
+        btnComm.className = activeClass;
+        notice.innerText = 'Discos gruesos de fundición (hasta 20kg / 45lb, sin microdiscos)';
+        customManager.classList.add('hidden');
+      } else if (type === 'custom') {
+        btnCustom.className = activeClass;
+        notice.innerText = 'Discos personalizados de tu gimnasio (20.4, 11.2, 10.4, 44 lb, etc.)';
+        customManager.classList.remove('hidden');
+      }
+
+      applyPlatePreset(type);
+      calculateLoad();
+    }
+
+    function applyPlatePreset(type) {
+      if (type === 'ipf') {
+        PLATE_SPECS_KG.forEach(p => p.enabled = true);
+        PLATE_SPECS_LB.forEach(p => p.enabled = true);
+      } else if (type === 'commercial') {
+        PLATE_SPECS_KG.forEach(p => { p.enabled = !p.isIpfOnly; });
+        PLATE_SPECS_LB.forEach(p => { p.enabled = !p.isIpfOnly; });
+      }
+      renderInventoryCheckboxes();
+    }
+
+    function setPrimaryUnit(unit) {
+      if (currentUnit === unit) return;
+      currentUnit = unit;
+
+      const btnKg = document.getElementById('unitBtnKg');
+      const btnLb = document.getElementById('unitBtnLb');
+      const targetInput = document.getElementById('targetWeightInput');
+      const progInput = document.getElementById('progBase1rmInput');
+      const dotsBwInput = document.getElementById('dotsBwInput');
+      const dotsSqInput = document.getElementById('dotsSquatInput');
+      const dotsBpInput = document.getElementById('dotsBenchInput');
+      const dotsDlInput = document.getElementById('dotsDeadliftInput');
+      const evalWeightInput = document.getElementById('evalWeight');
+
+      const factor = unit === 'kg' ? (1 / 2.20462262) : 2.20462262;
+
+      if (unit === 'kg') {
+        btnKg.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-sm';
+        btnLb.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white';
+        document.getElementById('targetWeightUnitLabel').innerText = 'KG';
+        document.getElementById('actualUnitLabel').innerText = 'KG';
+        document.getElementById('effortWeightUnitLabel').innerText = 'KG';
+        targetInput.max = MAX_LOAD_LIMIT_KG;
+        document.querySelectorAll('.unitText').forEach(el => el.innerText = 'KG');
+      } else {
+        btnLb.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-sm';
+        btnKg.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white';
+        document.getElementById('targetWeightUnitLabel').innerText = 'LBS';
+        document.getElementById('actualUnitLabel').innerText = 'LBS';
+        document.getElementById('effortWeightUnitLabel').innerText = 'LBS';
+        targetInput.max = Math.round(MAX_LOAD_LIMIT_KG * 2.20462262);
+        document.querySelectorAll('.unitText').forEach(el => el.innerText = 'LBS');
+      }
+
+      if (parseFloat(targetInput.value) > 0) targetInput.value = (Math.round(parseFloat(targetInput.value) * factor * 2) / 2);
+      if (parseFloat(progInput.value) > 0) progInput.value = (Math.round(parseFloat(progInput.value) * factor * 2) / 2);
+      if (parseFloat(dotsBwInput.value) > 0) dotsBwInput.value = (Math.round(parseFloat(dotsBwInput.value) * factor * 10) / 10);
+      if (parseFloat(dotsSqInput.value) > 0) dotsSqInput.value = (Math.round(parseFloat(dotsSqInput.value) * factor * 2) / 2);
+      if (parseFloat(dotsBpInput.value) > 0) dotsBpInput.value = (Math.round(parseFloat(dotsBpInput.value) * factor * 2) / 2);
+      if (parseFloat(dotsDlInput.value) > 0) dotsDlInput.value = (Math.round(parseFloat(dotsDlInput.value) * factor * 2) / 2);
+      if (parseFloat(evalWeightInput.value) > 0) evalWeightInput.value = (Math.round(parseFloat(evalWeightInput.value) * factor * 2) / 2);
+
+      updateBarSelectLabels();
+      renderInventoryCheckboxes();
+      calculateLoad();
+      calculateEffort();
+      calculateProgression();
+      calculatePowerliftingPoints();
+      calculatePowerTier();
+    }
+
+    function updateBarSelectLabels() {
+      const barSelect = document.getElementById('barSelect');
+      const isKg = currentUnit === 'kg';
+      barSelect.options[0].text = `Olímpica Masculina / IPF (${isKg ? '20 kg' : '45 lb'})`;
+      barSelect.options[1].text = `Olímpica Femenina (${isKg ? '15 kg' : '35 lb'})`;
+      barSelect.options[2].text = `Barra Técnica (${isKg ? '10 kg' : '22 lb'})`;
+      barSelect.options[3].text = `Trap Bar / Hex Bar (${isKg ? '25 kg' : '55 lb'})`;
+      barSelect.options[4].text = `Barra Z / EZ Curl (${isKg ? '8 kg' : '17.6 lb'})`;
+    }
+
+    function getSelectedBarWeight() {
+      const barSelect = document.getElementById('barSelect');
+      if (barSelect.value === 'custom') {
+        return parseFloat(document.getElementById('customBarWeight').value) || 0;
+      }
+      const option = barSelect.options[barSelect.selectedIndex];
+      return currentUnit === 'kg' ? parseFloat(option.value) : parseFloat(option.dataset.lb);
+    }
+
+    function getSelectedCollarWeight() {
+      const collarSelect = document.getElementById('collarSelect');
+      const option = collarSelect.options[collarSelect.selectedIndex];
+      return currentUnit === 'kg' ? parseFloat(option.value) : parseFloat(option.dataset.lb || 0);
+    }
+
+    function onBarChange() {
+      const isCustom = document.getElementById('barSelect').value === 'custom';
+      document.getElementById('customBarWrap').classList.toggle('hidden', !isCustom);
+      calculateLoad();
+    }
+
+    function onWeightChange() {
+      const targetInput = document.getElementById('targetWeightInput');
+      let val = parseFloat(targetInput.value) || 0;
+      const maxAllowed = currentUnit === 'kg' ? MAX_LOAD_LIMIT_KG : Math.round(MAX_LOAD_LIMIT_KG * 2.20462262);
+      
+      const limitNotice = document.getElementById('sleeveLimitNotice');
+      if (val > maxAllowed) {
+        val = maxAllowed;
+        targetInput.value = val;
+        limitNotice.classList.remove('hidden');
+      } else {
+        limitNotice.classList.add('hidden');
+      }
+      calculateLoad();
+    }
+
+    function adjustWeight(delta) {
+      const input = document.getElementById('targetWeightInput');
+      let val = (parseFloat(input.value) || 0) + delta;
+      const maxAllowed = currentUnit === 'kg' ? MAX_LOAD_LIMIT_KG : Math.round(MAX_LOAD_LIMIT_KG * 2.20462262);
+      
+      if (val > maxAllowed) val = maxAllowed;
+      input.value = Math.max(0, val);
+      onWeightChange();
+    }
+
+    function setBarWeightFromNumber(num) {
+      const maxAllowed = currentUnit === 'kg' ? MAX_LOAD_LIMIT_KG : Math.round(MAX_LOAD_LIMIT_KG * 2.20462262);
+      document.getElementById('targetWeightInput').value = Math.min(num, maxAllowed);
+      onWeightChange();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function getActivePlateSpecs() {
+      if (currentPlateType === 'custom') {
+        return currentUnit === 'kg' ? CUSTOM_PLATES_KG : CUSTOM_PLATES_LB;
+      }
+      return currentUnit === 'kg' ? PLATE_SPECS_KG : PLATE_SPECS_LB;
+    }
+
+    function renderInventoryCheckboxes() {
+      const container = document.getElementById('platesCheckboxesContainer');
+      container.innerHTML = '';
+      const specs = getActivePlateSpecs();
+
+      specs.forEach((plate, idx) => {
+        const div = document.createElement('div');
+        div.className = `flex items-center justify-between p-2 rounded-lg border text-xs font-semibold select-none transition-all ${
+          plate.enabled 
+            ? 'bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200' 
+            : 'bg-neutral-100 dark:bg-neutral-950/40 border-neutral-200 dark:border-neutral-800 text-neutral-400 opacity-50'
+        }`;
+        
+        let badgeColorClass = currentPlateType === 'commercial' ? 'plate-comm' : `plate-${plate.color}`;
+
+        div.innerHTML = `
+          <label class="flex items-center space-x-2 cursor-pointer flex-1">
+            <input type="checkbox" ${plate.enabled ? 'checked' : ''} onchange="togglePlateInventory(${idx})" class="rounded border-neutral-300 dark:border-neutral-700 text-blue-600 focus:ring-0">
+            <span class="w-3 h-3 rounded-full ${badgeColorClass} border inline-block"></span>
+            <span class="font-mono-num">${plate.name}</span>
+          </label>
+          ${currentPlateType === 'custom' ? `
+            <button onclick="removeCustomPlate(${idx})" class="text-neutral-400 hover:text-red-500 ml-1 p-0.5" title="Eliminar disco">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          ` : ''}
+        `;
+        container.appendChild(div);
+      });
+
+      lucide.createIcons();
+    }
+
+    function togglePlateInventory(index) {
+      const specs = getActivePlateSpecs();
+      specs[index].enabled = !specs[index].enabled;
+      renderInventoryCheckboxes();
+      calculateLoad();
+    }
+
+    function togglePlateSettings() {
+      document.getElementById('plateInventoryDrawer').classList.toggle('hidden');
+    }
+
+    function addCustomPlate() {
+      const input = document.getElementById('newCustomPlateWeight');
+      const weight = parseFloat(input.value);
+      if (!weight || weight <= 0) return;
+
+      const list = currentUnit === 'kg' ? CUSTOM_PLATES_KG : CUSTOM_PLATES_LB;
+      const height = Math.min(190, Math.max(50, Math.round(weight * 8 + 40)));
+      const width = Math.min(28, Math.max(8, Math.round(weight * 0.9 + 6)));
+      const customColors = ['custom-purple', 'custom-teal', 'custom-orange', 'custom-slate', 'blue', 'yellow', 'green'];
+      const chosenColor = customColors[list.length % customColors.length];
+
+      list.push({
+        weight: weight,
+        color: chosenColor,
+        name: `${weight} ${currentUnit}`,
+        height: height,
+        widthIpf: width,
+        widthComm: width + 4,
+        enabled: true
+      });
+
+      list.sort((a, b) => b.weight - a.weight);
+      input.value = '';
+      renderInventoryCheckboxes();
+      calculateLoad();
+    }
+
+    function removeCustomPlate(index) {
+      const list = currentUnit === 'kg' ? CUSTOM_PLATES_KG : CUSTOM_PLATES_LB;
+      list.splice(index, 1);
+      renderInventoryCheckboxes();
+      calculateLoad();
+    }
+
+    function resetCustomPlatesDefault() {
+      CUSTOM_PLATES_KG = [
+        { weight: 20.4, color: 'custom-purple', name: '20.4 kg (45 lb aprox)', height: 190, widthIpf: 24, widthComm: 26, enabled: true },
+        { weight: 11.2, color: 'custom-teal',   name: '11.2 kg (25 lb aprox)', height: 145, widthIpf: 18, widthComm: 20, enabled: true },
+        { weight: 10.4, color: 'custom-orange', name: '10.4 kg',               height: 140, widthIpf: 16, widthComm: 18, enabled: true },
+        { weight: 5.0,  color: 'white',         name: '5.0 kg',                height: 105, widthIpf: 10, widthComm: 14, enabled: true },
+        { weight: 2.5,  color: 'black',         name: '2.5 kg',                height: 85,  widthIpf: 9,  widthComm: 12, enabled: true },
+        { weight: 1.25, color: 'chrome',        name: '1.25 kg',               height: 70,  widthIpf: 8,  widthComm: 10, enabled: true }
+      ];
+
+      CUSTOM_PLATES_LB = [
+        { weight: 45.0, color: 'blue',          name: '45 lb',                 height: 190, widthIpf: 24, widthComm: 26, enabled: true },
+        { weight: 44.0, color: 'custom-purple', name: '44 lb (20 kg)',         height: 190, widthIpf: 22, widthComm: 25, enabled: true },
+        { weight: 35.0, color: 'yellow',        name: '35 lb',                 height: 165, widthIpf: 18, widthComm: 22, enabled: true },
+        { weight: 2.5,  color: 'chrome',        name: '2.5 lb',                height: 70,  widthIpf: 8,  widthComm: 10, enabled: true }
+      ];
+
+      renderInventoryCheckboxes();
+      calculateLoad();
+    }
+
+    function calculateLoad() {
+      const targetWeight = parseFloat(document.getElementById('targetWeightInput').value) || 0;
+      const barWeight = getSelectedBarWeight();
+      const collarWeight = getSelectedCollarWeight();
+
+      const baseWeight = barWeight + collarWeight;
+      let remainingWeight = Math.max(0, targetWeight - baseWeight);
+      let weightPerSide = remainingWeight / 2;
+
+      const specs = getActivePlateSpecs().filter(p => p.enabled);
+      const platesPerSide = [];
+
+      for (let plate of specs) {
+        while (weightPerSide >= plate.weight - 0.001) {
+          platesPerSide.push(plate);
+          weightPerSide -= plate.weight;
+        }
+      }
+
+      const effectiveSideWeight = platesPerSide.reduce((acc, p) => acc + p.weight, 0);
+      const actualTotal = targetWeight === 0 ? 0 : baseWeight + (effectiveSideWeight * 2);
+
+      document.getElementById('actualTotalWeight').innerText = actualTotal.toFixed(1).replace('.0', '');
+      document.getElementById('weightPerSideText').innerText = `${effectiveSideWeight.toFixed(2).replace('.00', '')} ${currentUnit}`;
+
+      const diffNotice = document.getElementById('weightDiffNotice');
+      if (targetWeight > 0 && Math.abs(actualTotal - targetWeight) > 0.05) {
+        diffNotice.classList.remove('hidden');
+      } else {
+        diffNotice.classList.add('hidden');
+      }
+
+      renderSvgBarbell(platesPerSide, collarWeight > 0 && targetWeight > 0);
+      renderBadges(platesPerSide);
+    }
+
+    // =========================================================
+    // RENDERIZADO SVG CON AUTO-ZOOM (VIEWBOX DINÁMICO)
+    // =========================================================
+    function renderSvgBarbell(plates, hasCollar) {
+      const svg = document.getElementById('barbellSvg');
+      svg.innerHTML = '';
+      const centerY = 120;
+
+      // Calcular el ancho real que ocupan los discos por lado
+      let totalPlatesWidth = 0;
+      plates.forEach(p => {
+        const width = currentPlateType === 'commercial' ? p.widthComm : p.widthIpf;
+        totalPlatesWidth += (width + 2);
+      });
+      if (hasCollar) totalPlatesWidth += 18;
+
+      // Mangas estándar: 240px. Si los discos superan 200px, extendemos la vista de cámara (Zoom-out)
+      const shaftWidth = 340;
+      const baseSleeveWidth = Math.max(240, totalPlatesWidth + 40);
+      const totalWidthNeeded = shaftWidth + (baseSleeveWidth * 2) + 80;
+
+      // Ancho base original es 900. Si se supera, ajustamos el viewBox dinámicamente
+      const viewWidth = Math.max(900, totalWidthNeeded);
+      const viewHeight = 240;
+      const viewMinX = -((viewWidth - 900) / 2);
+
+      // Aplicar el nuevo viewBox dinámico (efecto de alejamiento)
+      svg.setAttribute('viewBox', `${viewMinX} 0 ${viewWidth} ${viewHeight}`);
+
+      let svgHtml = '';
+
+      // Línea de suelo proporcional
+      svgHtml += `<line x1="${viewMinX - 100}" y1="220" x2="${viewMinX + viewWidth + 100}" y2="220" stroke="#737373" stroke-width="1.5" stroke-dasharray="4,4"/>`;
+
+      svgHtml += `
+        <defs>
+          <pattern id="knurlPattern" width="4" height="4" patternUnits="userSpaceOnUse">
+            <path d="M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2" stroke="#475569" stroke-width="0.8"/>
+          </pattern>
+          <linearGradient id="sleeveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#cbd5e1"/>
+            <stop offset="50%" stop-color="#94a3b8"/>
+            <stop offset="100%" stop-color="#475569"/>
+          </linearGradient>
+          <linearGradient id="shaftGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#64748b"/>
+            <stop offset="50%" stop-color="#334155"/>
+            <stop offset="100%" stop-color="#1e293b"/>
+          </linearGradient>
+        </defs>
+      `;
+
+      // Eje central de la barra (Shaft)
+      const shaftStartX = 280;
+      svgHtml += `<rect x="${shaftStartX}" y="${centerY - 10}" width="${shaftWidth}" height="20" fill="url(#shaftGrad)" rx="2"/>`;
+      svgHtml += `<rect x="${shaftStartX + 20}" y="${centerY - 10}" width="90" height="20" fill="url(#knurlPattern)" opacity="0.6"/>`;
+      svgHtml += `<rect x="${shaftStartX + 230}" y="${centerY - 10}" width="90" height="20" fill="url(#knurlPattern)" opacity="0.6"/>`;
+      svgHtml += `<rect x="${shaftStartX + 160}" y="${centerY - 10}" width="20" height="20" fill="url(#knurlPattern)" opacity="0.6"/>`;
+      
+      svgHtml += `<line x1="${shaftStartX + 115}" y1="${centerY - 10}" x2="${shaftStartX + 115}" y2="${centerY + 10}" stroke="#94a3b8" stroke-width="2"/>`;
+      svgHtml += `<line x1="${shaftStartX + 225}" y1="${centerY - 10}" x2="${shaftStartX + 225}" y2="${centerY + 10}" stroke="#94a3b8" stroke-width="2"/>`;
+
+      // Topes interiores
+      svgHtml += `<rect x="${shaftStartX - 20}" y="${centerY - 30}" width="20" height="60" rx="3" fill="#64748b" stroke="#1e293b" stroke-width="2"/>`;
+      svgHtml += `<rect x="${shaftStartX - 17}" y="${centerY - 28}" width="4" height="56" fill="rgba(255,255,255,0.2)"/>`;
+      svgHtml += `<rect x="${shaftStartX + shaftWidth}" y="${centerY - 30}" width="20" height="60" rx="3" fill="#64748b" stroke="#1e293b" stroke-width="2"/>`;
+      svgHtml += `<rect x="${shaftStartX + shaftWidth + 13}" y="${centerY - 28}" width="4" height="56" fill="rgba(255,255,255,0.2)"/>`;
+
+      // Mangas exteriores (crecen si la carga es extrema para contener los discos)
+      const sleeveLeftStartX = shaftStartX - 20 - baseSleeveWidth;
+      const sleeveRightStartX = shaftStartX + shaftWidth + 20;
+
+      svgHtml += `<rect x="${sleeveLeftStartX}" y="${centerY - 18}" width="${baseSleeveWidth}" height="36" rx="2" fill="url(#sleeveGrad)" stroke="#334155" stroke-width="1.5"/>`;
+      svgHtml += `<line x1="${sleeveLeftStartX}" y1="${centerY - 7}" x2="${shaftStartX - 20}" y2="${centerY - 7}" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>`;
+      
+      svgHtml += `<rect x="${sleeveRightStartX}" y="${centerY - 18}" width="${baseSleeveWidth}" height="36" rx="2" fill="url(#sleeveGrad)" stroke="#334155" stroke-width="1.5"/>`;
+      svgHtml += `<line x1="${sleeveRightStartX}" y1="${centerY - 7}" x2="${sleeveRightStartX + baseSleeveWidth}" y2="${centerY - 7}" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>`;
+
+      let currentXLeft = shaftStartX - 20; 
+      let currentXRight = shaftStartX + shaftWidth + 20; 
+
+      plates.forEach((plate) => {
+        const height = plate.height;
+        const width = currentPlateType === 'commercial' ? plate.widthComm : plate.widthIpf;
+        const yPos = centerY - (height / 2);
+
+        let plateClass = '';
+        let textColor = '#ffffff';
+
+        if (currentPlateType === 'commercial') {
+          plateClass = plate.weight >= 15 ? 'plate-comm' : 'plate-comm-light';
+          textColor = '#f8fafc';
+        } else if (currentPlateType === 'custom') {
+          plateClass = `plate-${plate.color}`;
+          textColor = '#ffffff';
+        } else {
+          plateClass = `plate-${plate.color}`;
+          const isLightPlate = (plate.color === 'white' || plate.color === 'yellow' || plate.color === 'chrome');
+          textColor = isLightPlate ? '#0f172a' : '#ffffff';
+        }
+
+        // Lado Derecho
+        svgHtml += `
+          <g class="transition-all duration-200">
+            <rect x="${currentXRight}" y="${yPos}" width="${width}" height="${height}" rx="3" class="${plateClass}" stroke-width="2"/>
+            <line x1="${currentXRight + 3}" y1="${yPos + 4}" x2="${currentXRight + 3}" y2="${yPos + height - 4}" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+            ${height >= 75 ? `
+              <text x="${currentXRight + (width / 2)}" y="${centerY + 3}" font-family="JetBrains Mono" font-size="10" font-weight="bold" fill="${textColor}" text-anchor="middle" transform="rotate(-90, ${currentXRight + (width / 2)}, ${centerY})">${plate.weight}</text>
+            ` : ''}
+          </g>
+        `;
+
+        // Lado Izquierdo
+        currentXLeft -= width;
+        svgHtml += `
+          <g class="transition-all duration-200">
+            <rect x="${currentXLeft}" y="${yPos}" width="${width}" height="${height}" rx="3" class="${plateClass}" stroke-width="2"/>
+            <line x1="${currentXLeft + width - 3}" y1="${yPos + 4}" x2="${currentXLeft + width - 3}" y2="${yPos + height - 4}" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+            ${height >= 75 ? `
+              <text x="${currentXLeft + (width / 2)}" y="${centerY + 3}" font-family="JetBrains Mono" font-size="10" font-weight="bold" fill="${textColor}" text-anchor="middle" transform="rotate(90, ${currentXLeft + (width / 2)}, ${centerY})">${plate.weight}</text>
+            ` : ''}
+          </g>
+        `;
+
+        currentXRight += width + 2;
+        currentXLeft -= 2;
+      });
+
+      if (hasCollar) {
+        svgHtml += `
+          <rect x="${currentXRight + 2}" y="${centerY - 22}" width="16" height="44" rx="3" fill="#475569" stroke="#1e293b" stroke-width="2"/>
+          <circle cx="${currentXRight + 10}" cy="${centerY}" r="3" fill="#0f172a"/>
+        `;
+        currentXLeft -= 16;
+        svgHtml += `
+          <rect x="${currentXLeft - 2}" y="${centerY - 22}" width="16" height="44" rx="3" fill="#475569" stroke="#1e293b" stroke-width="2"/>
+          <circle cx="${currentXLeft + 6}" cy="${centerY}" r="3" fill="#0f172a"/>
+        `;
+      }
+
+      svg.innerHTML = svgHtml;
+    }
+
+    function renderBadges(plates) {
+      const container = document.getElementById('sidePlateBadges');
+      container.innerHTML = '';
+
+      if (plates.length === 0) {
+        container.innerHTML = `<span class="text-xs text-neutral-400 italic">Barra vacía sin discos adicionales</span>`;
+        return;
+      }
+
+      const counts = {};
+      plates.forEach(p => {
+        counts[p.name] = (counts[p.name] || { count: 0, color: p.color, weight: p.weight });
+        counts[p.name].count++;
+      });
+
+      for (let name in counts) {
+        const item = counts[name];
+        const span = document.createElement('span');
+        let badgeColor = `plate-${item.color}`;
+        if (currentPlateType === 'commercial') badgeColor = 'plate-comm';
+
+        span.className = `inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-mono-num shadow-sm`;
+        span.innerHTML = `
+          <span class="w-2.5 h-2.5 rounded-full ${badgeColor} border mr-1.5"></span>
+          <span>${item.count} &times; ${name}</span>
+        `;
+        container.appendChild(span);
+      }
+    }
+
+    function copyLoadText() {
+      const total = document.getElementById('actualTotalWeight').innerText;
+      const unit = currentUnit.toUpperCase();
+      const perSide = document.getElementById('weightPerSideText').innerText;
+      const typeText = currentPlateType === 'ipf' ? 'Calibrados IPF' : currentPlateType === 'custom' ? 'Personalizados' : 'Comercial';
+      const text = `Carga en barra: ${total} ${unit} (${typeText} - Por lado: ${perSide})`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        const btnText = document.getElementById('copyBtnText');
+        btnText.innerText = '¡Copiado!';
+        setTimeout(() => btnText.innerText = 'Copiar Carga', 1800);
+      });
+    }
+
+    function setEffortMode(mode) {
+      currentEffortMode = mode;
+      const tabRpe = document.getElementById('effortTabRpe');
+      const tabRir = document.getElementById('effortTabRir');
+      const wrapRpe = document.getElementById('wrapRpeInput');
+      const wrapRir = document.getElementById('wrapRirInput');
+
+      const activeClass = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-indigo-600 text-white shadow-sm flex items-center space-x-1.5";
+      const inactiveClass = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white flex items-center space-x-1.5";
+
+      if (mode === 'rpe') {
+        tabRpe.className = activeClass;
+        tabRir.className = inactiveClass;
+        wrapRpe.classList.remove('hidden');
+        wrapRir.classList.add('hidden');
+      } else {
+        tabRir.className = activeClass;
+        tabRpe.className = inactiveClass;
+        wrapRir.classList.remove('hidden');
+        wrapRpe.classList.add('hidden');
+      }
+
+      calculateEffort();
+    }
+
+    function onEffortRepsChange(val) {
+      document.getElementById('effortRepsDisplay').innerText = `${val} ${val == 1 ? 'rep' : 'reps'}`;
+      calculateEffort();
+    }
+
+    function calculateEffort() {
+      const weight = parseFloat(document.getElementById('effortWeightInput').value) || 0;
+      const reps = parseInt(document.getElementById('effortRepsRange').value) || 0;
+
+      let effectiveRpe = 0;
+
+      if (currentEffortMode === 'rpe') {
+        effectiveRpe = parseFloat(document.getElementById('rpeSelectInput').value) || 0;
+        document.getElementById('rpeDisplayBadge').innerText = effectiveRpe > 0 ? `RPE ${effectiveRpe.toFixed(1)}` : 'RPE 0';
+      } else {
+        const rirVal = document.getElementById('rirSelectInput').value;
+        if (rirVal !== 'none') {
+          const rirNum = parseFloat(rirVal);
+          effectiveRpe = 10 - rirNum;
+          document.getElementById('rirDisplayBadge').innerText = `${rirNum} RIR en recámara`;
+        } else {
+          effectiveRpe = 0;
+          document.getElementById('rirDisplayBadge').innerText = 'RIR -';
+        }
+      }
+
+      if (weight <= 0 || reps <= 0 || effectiveRpe <= 0) {
+        document.getElementById('oneRmOfficial').innerText = '0.0';
+        document.getElementById('oneRmMin').innerText = '0.0';
+        document.getElementById('oneRmMax').innerText = '0.0';
+        document.getElementById('effortPercentageText').innerText = '0.0%';
+        renderRpeMatrix(0);
+        return;
+      }
+
+      const rpeClamped = Math.max(6, Math.min(10, effectiveRpe));
+      const repsClamped = Math.max(1, Math.min(12, reps));
+      const officialPct = (RTS_PERCENTAGES[repsClamped] && RTS_PERCENTAGES[repsClamped][rpeClamped]) 
+        ? RTS_PERCENTAGES[repsClamped][rpeClamped] 
+        : 1 - ((repsClamped + (10 - rpeClamped) - 1) * 0.03);
+
+      const e1rmOfficial = weight / officialPct;
+      document.getElementById('oneRmOfficial').innerText = e1rmOfficial.toFixed(1);
+      document.getElementById('effortPercentageText').innerText = `${(officialPct * 100).toFixed(1)}%`;
+
+      const effectiveReps = reps + (10 - effectiveRpe);
+      const e1rmMin = effectiveReps < 37 ? weight * (36 / (37 - effectiveReps)) : weight;
+      document.getElementById('oneRmMin').innerText = e1rmMin.toFixed(1);
+
+      const e1rmMax = weight * Math.pow(Math.max(1, effectiveReps), 0.10);
+      document.getElementById('oneRmMax').innerText = e1rmMax.toFixed(1);
+
+      renderRpeMatrix(e1rmOfficial);
+    }
+
+    function renderRpeMatrix(e1rm) {
+      const tbody = document.getElementById('rpeWorkMatrixBody');
+      tbody.innerHTML = '';
+      const targetReps = [1, 3, 5, 8];
+
+      targetReps.forEach(r => {
+        let w7 = 0, w8 = 0, w9 = 0, w10 = 0;
+        if (e1rm > 0) {
+          const p7  = (RTS_PERCENTAGES[r] && RTS_PERCENTAGES[r][7])  ? RTS_PERCENTAGES[r][7]  : 0.80;
+          const p8  = (RTS_PERCENTAGES[r] && RTS_PERCENTAGES[r][8])  ? RTS_PERCENTAGES[r][8]  : 0.85;
+          const p9  = (RTS_PERCENTAGES[r] && RTS_PERCENTAGES[r][9])  ? RTS_PERCENTAGES[r][9]  : 0.90;
+          const p10 = (RTS_PERCENTAGES[r] && RTS_PERCENTAGES[r][10]) ? RTS_PERCENTAGES[r][10] : 0.95;
+
+          w7  = Math.round((e1rm * p7) * 2) / 2;
+          w8  = Math.round((e1rm * p8) * 2) / 2;
+          w9  = Math.round((e1rm * p9) * 2) / 2;
+          w10 = Math.round((e1rm * p10) * 2) / 2;
+        }
+
+        const row = document.createElement('tr');
+        row.className = "hover:bg-neutral-100 dark:hover:bg-neutral-900/60 transition-colors";
+        row.innerHTML = `
+          <td class="py-2.5 font-bold text-neutral-900 dark:text-white">${r} ${r === 1 ? 'Singles' : r === 3 ? 'Triples' : 'reps'}</td>
+          <td class="py-2.5 text-neutral-600 dark:text-neutral-300">${w7}</td>
+          <td class="py-2.5 font-semibold text-indigo-600 dark:text-indigo-400">${w8}</td>
+          <td class="py-2.5 text-neutral-700 dark:text-neutral-200 font-bold">${w9}</td>
+          <td class="py-2.5 text-emerald-600 dark:text-emerald-400 font-extrabold">${w10}</td>
+          <td class="py-2.5 text-right">
+            <button onclick="setBarWeightFromNumber(${w8})" class="text-[11px] bg-white hover:bg-neutral-100 dark:bg-neutral-900 dark:hover:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 px-2 py-1 rounded text-neutral-700 dark:text-neutral-200 transition-colors">Cargar</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function setEffortWeightFromBar() {
+      const currentBar = parseFloat(document.getElementById('actualTotalWeight').innerText) || 0;
+      document.getElementById('effortWeightInput').value = currentBar;
+      calculateEffort();
+    }
+
+    function setProgressionMethod(method) {
+      currentProgMethod = method;
+
+      const tabs = {
+        smolov: document.getElementById('progTabSmolov'),
+        bilbo: document.getElementById('progTabBilbo'),
+        '531': document.getElementById('progTab531')
+      };
+
+      const smolovWrap = document.getElementById('smolovSelectWrap');
+      const bilboWrap = document.getElementById('bilboSelectWrap');
+      const wendlerWrap = document.getElementById('wendlerSelectWrap');
+      const tipText = document.getElementById('progShortTip');
+      const label = document.getElementById('progSelectLabel');
+
+      for (let k in tabs) {
+        tabs[k].className = (k === method) 
+          ? 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-600 text-white shadow-sm'
+          : 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white';
+      }
+
+      smolovWrap.classList.add('hidden');
+      bilboWrap.classList.add('hidden');
+      wendlerWrap.classList.add('hidden');
+
+      if (method === 'smolov') {
+        smolovWrap.classList.remove('hidden');
+        label.innerText = 'Semana del Ciclo';
+        tipText.innerText = 'Microciclo de 3 semanas con 4 sesiones semanales de alta frecuencia.';
+      } else if (method === 'bilbo') {
+        bilboWrap.classList.remove('hidden');
+        label.innerText = 'Intensidad Serie Bilbo (% 1RM)';
+        tipText.innerText = '1 serie única de activación concéntrica a máximas repeticiones (RIR 0).';
+      } else if (method === '531') {
+        wendlerWrap.classList.remove('hidden');
+        label.innerText = 'Semana del Mesociclo';
+        tipText.innerText = 'Entrenamiento basado en un Training Max (90% del 1RM real).';
+      }
+
+      calculateProgression();
+    }
+
+    function useCurrentE1rmForProgression() {
+      const e1rm = parseFloat(document.getElementById('oneRmOfficial').innerText) || 0;
+      if (e1rm > 0) {
+        document.getElementById('progBase1rmInput').value = e1rm.toFixed(1);
+        calculateProgression();
+      }
+    }
+
+    function calculateProgression() {
+      const base1rm = parseFloat(document.getElementById('progBase1rmInput').value) || 0;
+      const grid = document.getElementById('progressionCardsGrid');
+      grid.innerHTML = '';
+
+      if (base1rm <= 0) {
+        grid.innerHTML = `<div class="col-span-full py-8 text-center text-neutral-400 text-sm">Ingresa un 1RM base mayor a 0 para generar las sesiones.</div>`;
+        return;
+      }
+
+      let cardsData = [];
+
+      if (currentProgMethod === 'smolov') {
+        const week = parseInt(document.getElementById('smolovWeekSelect').value) || 1;
+        const weekIncrement = (week === 1) ? 0 : (week === 2) ? (currentUnit === 'kg' ? 2.5 : 5.0) : (currentUnit === 'kg' ? 5.0 : 10.0);
+
+        cardsData = [
+          { title: "Día 1 · Lunes", badge: "70% + inc", repsText: "6 series &times; 6 reps", rawWeight: (base1rm * 0.70) + weekIncrement, note: "Volumen Moderado" },
+          { title: "Día 2 · Miércoles", badge: "75% + inc", repsText: "7 series &times; 5 reps", rawWeight: (base1rm * 0.75) + weekIncrement, note: "Fuerza Técnica" },
+          { title: "Día 3 · Viernes", badge: "80% + inc", repsText: "8 series &times; 4 reps", rawWeight: (base1rm * 0.80) + weekIncrement, note: "Intensidad Alta" },
+          { title: "Día 4 · Sábado", badge: "85% + inc", repsText: "10 series &times; 3 reps", rawWeight: (base1rm * 0.85) + weekIncrement, note: "Potencia Máxima" }
+        ];
+      }
+      else if (currentProgMethod === 'bilbo') {
+        const intensity = parseFloat(document.getElementById('bilboIntensitySelect').value) || 0.55;
+        const bilboW = Math.round((base1rm * intensity) * 2) / 2;
+
+        cardsData = [
+          { title: "Serie 1: BILBO", badge: `${(intensity * 100).toFixed(0)}% 1RM`, repsText: "1 &times; MAX REPS (RIR 0)", rawWeight: bilboW, note: "A toda velocidad", highlight: true },
+          { title: "Serie 2: Back-off", badge: `${((intensity + 0.08) * 100).toFixed(0)}%`, repsText: "1 &times; 8 - 10 reps", rawWeight: bilboW * 1.15, note: "Velocidad constante" },
+          { title: "Serie 3: Accesoria", badge: `${((intensity + 0.15) * 100).toFixed(0)}%`, repsText: "1 &times; 6 - 8 reps", rawWeight: bilboW * 1.25, note: "Control técnico" }
+        ];
+      }
+      else if (currentProgMethod === '531') {
+        const week = parseInt(document.getElementById('wendlerWeekSelect').value) || 1;
+        const tm = base1rm * 0.90;
+
+        if (week === 1) {
+          cardsData = [
+            { title: "Set 1", badge: "65% TM", repsText: "1 &times; 5 reps", rawWeight: tm * 0.65, note: "Calentamiento efectivo" },
+            { title: "Set 2", badge: "75% TM", repsText: "1 &times; 5 reps", rawWeight: tm * 0.75, note: "Transición" },
+            { title: "Set 3 (AMRAP)", badge: "85% TM", repsText: "5+ reps (Fallo - 1)", rawWeight: tm * 0.85, note: "Serie Récord", highlight: true }
+          ];
+        } else if (week === 2) {
+          cardsData = [
+            { title: "Set 1", badge: "70% TM", repsText: "1 &times; 3 reps", rawWeight: tm * 0.70, note: "Calentamiento" },
+            { title: "Set 2", badge: "80% TM", repsText: "1 &times; 3 reps", rawWeight: tm * 0.80, note: "Transición" },
+            { title: "Set 3 (AMRAP)", badge: "90% TM", repsText: "3+ reps (Fallo - 1)", rawWeight: tm * 0.90, note: "Serie Récord", highlight: true }
+          ];
+        } else if (week === 3) {
+          cardsData = [
+            { title: "Set 1", badge: "75% TM", repsText: "1 &times; 5 reps", rawWeight: tm * 0.75, note: "Activación" },
+            { title: "Set 2", badge: "85% TM", repsText: "1 &times; 3 reps", rawWeight: tm * 0.85, note: "Intensidad" },
+            { title: "Set 3 (AMRAP)", badge: "95% TM", repsText: "1+ reps (Récord)", rawWeight: tm * 0.95, note: "Pico de ciclo", highlight: true }
+          ];
+        } else if (week === 4) {
+          cardsData = [
+            { title: "Deload 1", badge: "40% TM", repsText: "1 &times; 5 reps", rawWeight: tm * 0.40, note: "Recuperación" },
+            { title: "Deload 2", badge: "50% TM", repsText: "1 &times; 5 reps", rawWeight: tm * 0.50, note: "Técnica suave" },
+            { title: "Deload 3", badge: "60% TM", repsText: "1 &times; 5 reps", rawWeight: tm * 0.60, note: "Descarga articular" }
+          ];
+        }
+      }
+
+      cardsData.forEach(card => {
+        const targetW = Math.round(card.rawWeight * 2) / 2;
+        const div = document.createElement('div');
+        div.className = `p-4 rounded-xl border transition-all flex flex-col justify-between ${
+          card.highlight 
+            ? 'bg-amber-500/10 dark:bg-amber-950/20 border-amber-500/50 shadow-md shadow-amber-500/5 dark:shadow-amber-950/30 ring-1 ring-amber-500/30' 
+            : 'bg-neutral-50 dark:bg-neutral-950/80 border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700'
+        }`;
+
+        div.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between gap-1 mb-2">
+              <span class="text-xs font-bold text-neutral-900 dark:text-white tracking-wide">${card.title}</span>
+              <span class="text-[10px] font-mono-num font-bold px-2 py-0.5 rounded-full ${card.highlight ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300' : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-400'}">${card.badge}</span>
+            </div>
+            
+            <div class="my-3">
+              <div class="flex items-baseline space-x-1">
+                <span class="text-3xl font-black text-neutral-900 dark:text-white font-mono-num">${targetW}</span>
+                <span class="text-xs font-bold text-neutral-400 uppercase">${currentUnit}</span>
+              </div>
+              <div class="text-xs font-bold text-amber-600 dark:text-amber-400 font-mono-num mt-1">${card.repsText}</div>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-neutral-200 dark:border-neutral-900 flex items-center justify-between gap-2">
+            <span class="text-[10px] text-neutral-500 truncate">${card.note}</span>
+            <button onclick="setBarWeightFromNumber(${targetW})" class="text-xs font-semibold bg-white hover:bg-neutral-100 dark:bg-neutral-900 dark:hover:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 px-3 py-1.5 rounded-lg text-neutral-800 dark:text-neutral-200 transition-colors flex items-center space-x-1 shadow-sm">
+              <i data-lucide="arrow-up-right" class="w-3 h-3 text-amber-500 dark:text-amber-400"></i>
+              <span>Cargar</span>
+            </button>
+          </div>
+        `;
+        grid.appendChild(div);
+      });
+
+      lucide.createIcons();
+    }
+
+    function setDotsGender(gender) {
+      dotsGender = gender;
+      const maleBtn = document.getElementById('dotsGenderMale');
+      const femaleBtn = document.getElementById('dotsGenderFemale');
+
+      if (gender === 'male') {
+        maleBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-pink-600 text-white shadow-sm flex items-center space-x-1.5';
+        femaleBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white flex items-center space-x-1.5';
+      } else {
+        femaleBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-pink-600 text-white shadow-sm flex items-center space-x-1.5';
+        maleBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white flex items-center space-x-1.5';
+      }
+
+      calculatePowerliftingPoints();
+      calculatePowerTier();
+    }
+
+    function setDotsLiftFromBar(lift) {
+      const currentBar = parseFloat(document.getElementById('actualTotalWeight').innerText) || 0;
+      if (lift === 'squat') document.getElementById('dotsSquatInput').value = currentBar;
+      if (lift === 'bench') document.getElementById('dotsBenchInput').value = currentBar;
+      if (lift === 'deadlift') document.getElementById('dotsDeadliftInput').value = currentBar;
+      calculatePowerliftingPoints();
+    }
+
+    function calculatePowerliftingPoints() {
+      let bw = parseFloat(document.getElementById('dotsBwInput').value) || 0;
+      const sq = parseFloat(document.getElementById('dotsSquatInput').value) || 0;
+      const bp = parseFloat(document.getElementById('dotsBenchInput').value) || 0;
+      const dl = parseFloat(document.getElementById('dotsDeadliftInput').value) || 0;
+
+      const total = sq + bp + dl;
+      document.getElementById('dotsTotalDisplay').innerText = total.toFixed(1);
+
+      if (bw <= 0 || total <= 0) {
+        document.getElementById('dotsScoreDisplay').innerText = '0.00';
+        document.getElementById('ipfGlScoreDisplay').innerText = '0.00';
+        document.getElementById('wilksScoreDisplay').innerText = '0.00';
+        document.getElementById('categoryLabelDisplay').innerText = 'Sin datos';
+        document.getElementById('marginLabelDisplay').innerText = 'Margen al pesaje límite: 0.00 kg';
+        return;
+      }
+
+      let bwKg = currentUnit === 'lb' ? (bw / 2.20462262) : bw;
+      let totalKg = currentUnit === 'lb' ? (total / 2.20462262) : total;
+
+      let catText = '-90 kg (IPL)';
+      let margin = (90.0 - bwKg).toFixed(2);
+      if (dotsGender === 'male') {
+        if (bwKg <= 82.5) { catText = '-82.5 kg (IPL)'; margin = (82.5 - bwKg).toFixed(2); }
+        else if (bwKg <= 90.0) { catText = '-90 kg (IPL)'; margin = (90.0 - bwKg).toFixed(2); }
+        else if (bwKg <= 100.0) { catText = '-100 kg (IPL)'; margin = (100.0 - bwKg).toFixed(2); }
+        else { catText = '+100 kg (IPL)'; margin = '0.00'; }
+      } else {
+        if (bwKg <= 60.0) { catText = '-60 kg (IPL)'; margin = (60.0 - bwKg).toFixed(2); }
+        else if (bwKg <= 67.5) { catText = '-67.5 kg (IPL)'; margin = (67.5 - bwKg).toFixed(2); }
+        else if (bwKg <= 75.0) { catText = '-75 kg (IPL)'; margin = (75.0 - bwKg).toFixed(2); }
+        else { catText = '+75 kg (IPL)'; margin = '0.00'; }
+      }
+      document.getElementById('categoryLabelDisplay').innerText = catText;
+      document.getElementById('marginLabelDisplay').innerText = `Margen al pesaje límite: ${margin} kg`;
+
+      let a, b, c, d, e;
+      if (dotsGender === 'male') {
+        bwKg = Math.max(40, Math.min(210, bwKg));
+        a = -0.0000010930;
+        b = 0.0007391293;
+        c = -0.1918759221;
+        d = 24.0900786;
+        e = -307.75076;
+      } else {
+        bwKg = Math.max(35, Math.min(150, bwKg));
+        a = -0.0000010706;
+        b = 0.0005158568;
+        c = -0.1126655495;
+        d = 13.6175032;
+        e = -57.96288;
+      }
+      const denomDots = (a * Math.pow(bwKg, 4)) + (b * Math.pow(bwKg, 3)) + (c * Math.pow(bwKg, 2)) + (d * bwKg) + e;
+      const dotsScore = (500 / denomDots) * totalKg;
+      document.getElementById('dotsScoreDisplay').innerText = dotsScore.toFixed(2);
+
+      const ipf = IPF_GL_PARAMS[dotsGender];
+      const denomIpf = ipf.A - ipf.B * Math.exp(-ipf.C * bwKg);
+      const ipfScore = (totalKg * 100) / denomIpf;
+      document.getElementById('ipfGlScoreDisplay').innerText = ipfScore.toFixed(2);
+
+      const w = WILKS_PARAMS[dotsGender];
+      const denomWilks = w[0] + (w[1] * bwKg) + (w[2] * Math.pow(bwKg, 2)) + (w[3] * Math.pow(bwKg, 3)) + (w[4] * Math.pow(bwKg, 4)) + (w[5] * Math.pow(bwKg, 5));
+      const wilksScore = (totalKg * 500) / denomWilks;
+      document.getElementById('wilksScoreDisplay').innerText = wilksScore.toFixed(2);
+
+      const glRows = [
+        { id: 'gl-row-mundial', min: 95.0, label: 'Clase Mundial', color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-500/30' },
+        { id: 'gl-row-elite', min: 84.1, label: 'Élite', color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-500/30' },
+        { id: 'gl-row-nacional', min: 72.1, label: 'Avanzado / Nacional', color: 'text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/20 border-pink-200 dark:border-pink-500/30' },
+        { id: 'gl-row-intermedio', min: 60.0, label: 'Intermedio', color: 'text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800/40 border-neutral-200 dark:border-neutral-700/50' },
+        { id: 'gl-row-club', min: 0, label: 'Iniciación / Club Local', color: 'text-neutral-500 bg-neutral-100 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800' }
+      ];
+
+      glRows.forEach(r => {
+        const el = document.getElementById(r.id);
+        if (el) el.className = "flex justify-between py-1 px-2 rounded font-medium text-neutral-400 dark:text-neutral-500 font-mono-num transition-colors";
+      });
+
+      const matchedTier = glRows.find(r => ipfScore >= r.min);
+      if (matchedTier) {
+        const badge = document.getElementById('dotsCategoryBadge');
+        badge.className = `px-2.5 py-0.5 text-xs font-black uppercase tracking-wider rounded-full border ${matchedTier.color}`;
+        badge.innerText = matchedTier.label;
+
+        const rowActive = document.getElementById(matchedTier.id);
+        if (rowActive) {
+          rowActive.className = `flex justify-between py-1 px-2 rounded font-bold border font-mono-num ${matchedTier.color}`;
+        }
+      }
+    }
+
+    function calculatePowerTier() {
+      let bw = parseFloat(document.getElementById('dotsBwInput').value) || 0;
+      let weight = parseFloat(document.getElementById('evalWeight').value) || 0;
+      const reps = parseInt(document.getElementById('evalReps').value) || 0;
+      const exercise = document.getElementById('evalExercise').value;
+
+      if (weight <= 0 || reps <= 0 || bw <= 0) {
+        document.getElementById('eval1RM').innerText = '0.0';
+        document.getElementById('brzyckiRM').innerText = `Brzycki: 0.0 ${currentUnit}`;
+        document.getElementById('godRatio').innerText = `0.00x BW`;
+        document.getElementById('godBadge').innerText = 'SIN CLASIFICAR';
+        document.getElementById('godTierBadge').innerText = 'Tier C';
+        document.getElementById('godTitle').innerText = 'Ingresa tus datos';
+        document.getElementById('godDesc').innerText = 'Coloca una carga y repeticiones realizadas para evaluar tu poder relativo.';
+        document.getElementById('godIcon').innerText = '🛡️';
+        document.getElementById('godProgressBar').style.width = '0%';
+        document.getElementById('godCard').className = `p-5 sm:p-6 rounded-2xl border border-neutral-300 dark:border-zinc-800 bg-neutral-100 dark:bg-[#161720] flex flex-col md:flex-row items-center justify-between gap-5 transition-all duration-300`;
+        return;
+      }
+
+      const epley = reps === 1 ? weight : weight * (1 + reps / 30);
+      const brzycki = reps === 1 ? weight : weight / (1.0278 - (0.0278 * reps));
+
+      document.getElementById('eval1RM').innerText = epley.toFixed(1);
+      document.getElementById('brzyckiRM').innerText = `Brzycki: ${brzycki.toFixed(1)} ${currentUnit}`;
+
+      const rawRatio = epley / bw;
+      const factor = EXERCISE_WEIGHTS[exercise] || 1.0;
+      const effectiveScore = rawRatio * factor;
+
+      document.getElementById('godRatio').innerText = `${rawRatio.toFixed(2)}x BW`;
+
+      const tier = TIERS_PODER.find(t => effectiveScore >= t.minScore) || TIERS_PODER[TIERS_PODER.length - 1];
+
+      const topBadge = document.getElementById('godBadge');
+      topBadge.className = `self-start sm:self-auto px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase border transition-all duration-300 ${tier.badgeClass}`;
+      topBadge.innerText = tier.tierName;
+
+      document.getElementById('godTierBadge').innerText = tier.tierName;
+      document.getElementById('godTierBadge').className = `text-[9px] px-2 py-0.5 rounded font-black uppercase border font-mono-num ${tier.badgeClass}`;
+
+      document.getElementById('godTitle').innerText = tier.title;
+      document.getElementById('godDesc').innerText = tier.desc;
+      document.getElementById('godIcon').innerText = tier.icon;
+
+      const card = document.getElementById('godCard');
+      card.className = `p-5 sm:p-6 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-5 transition-all duration-300 ${tier.containerStyle}`;
+
+      document.getElementById('godProgressBar').style.width = `${tier.progress}%`;
+    }
+
+    function filterFedCards(filter) {
+      const cards = document.querySelectorAll('.fed-card');
+      const tabs = {
+        all: document.getElementById('fedTabAll'),
+        tested: document.getElementById('fedTabTested'),
+        open: document.getElementById('fedTabOpen')
+      };
+
+      const inactive = "px-3 py-1 rounded-lg font-bold transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white";
+      const active = "px-3 py-1 rounded-lg font-bold transition-all bg-sky-600 text-white shadow-sm";
+
+      for (let k in tabs) tabs[k].className = (k === filter) ? active : inactive;
+
+      cards.forEach(card => {
+        const isTested = card.getAttribute('data-tested') === 'true';
+        if (filter === 'all') {
+          card.classList.remove('hidden');
+        } else if (filter === 'tested') {
+          card.classList.toggle('hidden', !isTested);
+        } else if (filter === 'open') {
+          card.classList.toggle('hidden', isTested);
+        }
+      });
+    }
+
+    function onConvertInput(source) {
+      const kgInput = document.getElementById('convKgInput');
+      const lbInput = document.getElementById('convLbInput');
+
+      if (source === 'kg') {
+        const kg = parseFloat(kgInput.value) || 0;
+        lbInput.value = kg > 0 ? (kg * 2.20462262).toFixed(1) : 0;
+      } else {
+        const lb = parseFloat(lbInput.value) || 0;
+        kgInput.value = lb > 0 ? (lb / 2.20462262).toFixed(1) : 0;
+      }
+    }
+
+    function setConvWeight(kg) {
+      document.getElementById('convKgInput').value = kg;
+      onConvertInput('kg');
+    }
+  </script>
+</body>
+</html>
